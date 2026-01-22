@@ -1,0 +1,925 @@
+openapi: 3.0.3
+info:
+  title: Smart-Sync Concierge - Appointments API
+  description: |
+    API de citas agentica que procesa lenguaje natural para crear, gestionar y negociar citas.
+
+    ## Características Principales
+
+    - **Prompt-First**: Crear citas con lenguaje natural
+    - **Multi-Agente**: Pipeline con 6 agentes especializados
+    - **Negociación Inteligente**: Sugerencias automáticas cuando hay conflictos
+    - **Decision Tracing**: Trazabilidad completa de cada decisión
+    - **Validación Geo-Temporal**: Zonas horarias y reglas de negocio
+
+    ## Flujo de Creación de Cita
+
+    1. Usuario envía prompt en lenguaje natural
+    2. ParsingAgent extrae entidades (fecha, hora, contacto, etc.)
+    3. TemporalAgent resuelve referencias relativas ("mañana")
+    4. GeoAgent valida coherencia geográfica
+    5. ValidationAgent verifica reglas de negocio
+    6. AvailabilityAgent detecta conflictos
+    7. NegotiationAgent genera alternativas (si aplica)
+    8. Respuesta con cita confirmada o sugerencias
+  version: 0.1.0
+  contact:
+    name: Smart-Sync Concierge Team
+    email: api@smartsync.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo local
+  - url: https://staging-api.smartsync.example.com/api/v1
+    description: Staging
+  - url: https://api.smartsync.example.com/api/v1
+    description: Producción
+
+tags:
+  - name: appointments
+    description: Operaciones de citas
+  - name: availability
+    description: Consulta de disponibilidad
+  - name: traces
+    description: Trazabilidad de decisiones
+
+paths:
+  /appointments/:
+    post:
+      tags: [appointments]
+      summary: Crear cita desde lenguaje natural
+      description: |
+        Procesa un prompt en lenguaje natural para crear una cita.
+
+        El prompt es procesado por el pipeline de agentes:
+        - **ParsingAgent**: Extrae entidades
+        - **TemporalAgent**: Resuelve fechas relativas
+        - **GeoAgent**: Valida ubicación
+        - **ValidationAgent**: Verifica reglas
+        - **AvailabilityAgent**: Detecta conflictos
+        - **NegotiationAgent**: Genera alternativas si hay conflictos
+
+        ## Casos de Respuesta
+
+        - `201`: Cita creada exitosamente
+        - `409`: Conflicto detectado, se incluyen sugerencias
+        - `400`: Prompt ambiguo o inválido
+        - `422`: Entidades no pudieron ser extraídas
+      operationId: createAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppointmentRequest'
+            examples:
+              exito_completo:
+                summary: Cita completa sin ambigüedades
+                value:
+                  prompt: "cita mañana 10am con Dr. Pérez por consulta general"
+                  user_timezone: "America/Mexico_City"
+              con_ambiguedad:
+                summary: Cita con contacto ambiguo
+                value:
+                  prompt: "cita mañana con el doctor"
+                  user_timezone: "America/Mexico_City"
+              solo_fecha:
+                summary: Solo fecha, hora sugerida
+                value:
+                  prompt: "cita el próximo lunes"
+                  user_timezone: "America/Mexico_City"
+      responses:
+        '201':
+          description: Cita creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentCreatedResponse'
+              examples:
+                cita_confirmada:
+                  summary: Cita confirmada
+                  value:
+                    status: "created"
+                    appointment:
+                      id: "apt_20260123_a1b2c3d4"
+                      fecha: "2026-01-23"
+                      hora_inicio: "10:00"
+                      hora_fin: "11:00"
+                      contacto:
+                        id: "contact_dr_perez"
+                        nombre: "Dr. Pérez"
+                      tipo:
+                        id: "service_consulta_general"
+                        nombre: "Consulta General"
+                      estado: "confirmed"
+                      timezone: "America/Mexico_City"
+                    trace_id: "trc_abc123"
+                    confidence: 0.95
+        '409':
+          description: Conflicto de disponibilidad detectado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentConflictResponse'
+              examples:
+                conflicto_simple:
+                  summary: Conflicto con sugerencias
+                  value:
+                    status: "conflict"
+                    conflict:
+                      type: "full_overlap"
+                      conflicting_appointment_id: "apt_20260123_x9y8z7"
+                      overlapping_with: "Dr. Pérez - 10:00-11:00"
+                    suggestions:
+                      - rank: 1
+                        fecha: "2026-01-23"
+                        hora_inicio: "11:00"
+                        hora_fin: "12:00"
+                        motivo: "Inmediatamente después de la cita existente"
+                        prioridad: 0.95
+                      - rank: 2
+                        fecha: "2026-01-23"
+                        hora_inicio: "09:00"
+                        hora_fin: "10:00"
+                        motivo: "Antes de la cita existente"
+                        prioridad: 0.90
+                      - rank: 3
+                        fecha: "2026-01-24"
+                        hora_inicio: "10:00"
+                        hora_fin: "11:00"
+                        motivo: "Siguiente día, misma hora solicitada"
+                        prioridad: 0.85
+                    trace_id: "trc_def456"
+        '400':
+          description: Request inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                ambiguedad:
+                  summary: Prompt ambiguo
+                  value:
+                    error: "ambiguous_prompt"
+                    message: "El prompt contiene información ambigua"
+                    ambiguities:
+                      - field: "contacto"
+                        issue: "generic"
+                        message: "¿Con qué doctor?"
+                        suggestions: ["Dr. Pérez", "Dra. García", "Dr. López"]
+        '422':
+          description: Entidades no extraídas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "parsing_failed"
+                message: "No se pudieron extraer las entidades del prompt"
+                confidence: 0.3
+    get:
+      tags: [appointments]
+      summary: Listar citas
+      description: |
+        Obtiene lista de citas con filtros opcionales.
+
+        Soporta paginación y filtrado por:
+        - Fecha (rango o específica)
+        - Contacto
+        - Estado
+        - Ubicación
+      operationId: listAppointments
+      parameters:
+        - name: fecha_inicio
+          in: query
+          description: Fecha de inicio del filtro (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-01-01"
+        - name: fecha_fin
+          in: query
+          description: Fecha de fin del filtro (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-01-31"
+        - name: contacto_id
+          in: query
+          description: Filtrar por contacto
+          required: false
+          schema:
+            type: string
+          example: "contact_dr_perez"
+        - name: estado
+          in: query
+          description: Filtrar por estado
+          required: false
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled, completed, no_show]
+        - name: page
+          in: query
+          description: Número de página
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: page_size
+          in: query
+          description: Tamaño de página
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de citas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Total de citas
+                  next:
+                    type: string
+                    nullable: true
+                    description: URL de siguiente página
+                  previous:
+                    type: string
+                    nullable: true
+                    description: URL de página anterior
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppointmentSummary'
+
+  /appointments/{appointment_id}/:
+    get:
+      tags: [appointments]
+      summary: Obtener detalle de cita
+      description: Obtiene detalles completos de una cita específica
+      operationId: getAppointment
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          description: ID de la cita
+          schema:
+            type: string
+            pattern: '^apt_[0-9]{8}_[a-z0-9]+$'
+      responses:
+        '200':
+          description: Detalle de la cita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentDetail'
+        '404':
+          description: Cita no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags: [appointments]
+      summary: Actualizar cita
+      description: Actualiza información de una cita existente
+      operationId: updateAppointment
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAppointmentRequest'
+      responses:
+        '200':
+          description: Cita actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentDetail'
+        '404':
+          description: Cita no encontrada
+    delete:
+      tags: [appointments]
+      summary: Cancelar cita
+      description: |
+        Cancela una cita existente.
+
+        La cita no se elimina, cambia su estado a `cancelled`.
+      operationId: cancelAppointment
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cita cancelada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "cancelled"
+                  message:
+                    type: string
+                    example: "Cita cancelada exitosamente"
+        '404':
+          description: Cita no encontrada
+
+  /appointments/{appointment_id}/reschedule/:
+    post:
+      tags: [appointments]
+      summary: Reprogramar cita
+      description: |
+        Reprograma una cita a nueva fecha/hora.
+
+        El nuevo horario se valida para detectar conflictos.
+      operationId: rescheduleAppointment
+      parameters:
+        - name: appointment_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nueva_fecha, nueva_hora_inicio]
+              properties:
+                nueva_fecha:
+                  type: string
+                  format: date
+                  description: Nueva fecha (ISO 8601)
+                  example: "2026-01-25"
+                nueva_hora_inicio:
+                  type: string
+                  format: time
+                  description: Nueva hora de inicio (HH:MM)
+                  example: "14:00"
+                motivo:
+                  type: string
+                  description: Motivo de reprogramación
+                  example: "El paciente solicitó cambio por conflicto personal"
+      responses:
+        '200':
+          description: Cita reprogramada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentDetail'
+        '409':
+          description: Conflicto en nuevo horario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentConflictResponse'
+
+  /availability/:
+    get:
+      tags: [availability]
+      summary: Consultar disponibilidad general
+      description: |
+        Consulta disponibilidad de citas sin crear una.
+
+        Útil para:
+        - Mostrar calendario disponible
+        - Verificar antes de solicitar
+        - Planificar con antelación
+      operationId: getAvailability
+      parameters:
+        - name: contacto_id
+          in: query
+          description: ID del contacto (requerido)
+          required: true
+          schema:
+            type: string
+        - name: fecha
+          in: query
+          description: Fecha a consultar (default: hoy)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: dias
+          in: query
+          description: Días a consultar desde la fecha
+          required: false
+          schema:
+            type: integer
+            default: 7
+            minimum: 1
+            maximum: 30
+      responses:
+        '200':
+          description: Disponibilidad obtenida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacto_id:
+                    type: string
+                  fecha_inicio:
+                    type: string
+                    format: date
+                  fecha_fin:
+                    type: string
+                    format: date
+                  slots_disponibles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fecha:
+                          type: string
+                          format: date
+                        slots:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              hora_inicio:
+                                type: string
+                                format: time
+                              hora_fin:
+                                type: string
+                                format: time
+                              disponible:
+                                type: boolean
+
+  /availability/slots/:
+    get:
+      tags: [availability]
+      summary: Buscar slots específicos
+      description: |
+        Busca slots disponibles en fecha/hora específica.
+
+        Retorna si el slot está disponible y opciones cercanas si no lo está.
+      operationId: checkSlot
+      parameters:
+        - name: contacto_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: fecha
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: hora
+          in: query
+          required: true
+          schema:
+            type: string
+            format: time
+        - name: duracion_minutos
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 60
+      responses:
+        '200':
+          description: Disponibilidad del slot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  disponible:
+                    type: boolean
+                  slot:
+                    type: object
+                    properties:
+                      fecha:
+                        type: string
+                        format: date
+                      hora_inicio:
+                        type: string
+                        format: time
+                      hora_fin:
+                        type: string
+                        format: time
+                  alternativas:
+                    type: array
+                    description: Slots cercanos si no está disponible
+                    items:
+                      type: object
+                      properties:
+                        fecha:
+                          type: string
+                          format: date
+                        hora_inicio:
+                          type: string
+                          format: time
+                        distancia_minutos:
+                          type: integer
+                          description: Minutos de diferencia del horario solicitado
+
+  /traces/{trace_id}/:
+    get:
+      tags: [traces]
+      summary: Obtener trace de decisiones
+      description: |
+        Obtiene el trace completo de decisiones tomadas por los agentes.
+
+        Incluye:
+        - Decisiones de cada agente
+        - Razonamiento explicado
+        - Input/output de cada paso
+      operationId: getTrace
+      parameters:
+        - name: trace_id
+          in: path
+          required: true
+          description: ID del trace
+          schema:
+            type: string
+            pattern: '^trc_[a-z0-9]+$'
+      responses:
+        '200':
+          description: Trace obtenido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionTrace'
+        '404':
+          description: Trace no encontrado
+
+components:
+  schemas:
+    CreateAppointmentRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          description: Prompt en lenguaje natural
+          minLength: 5
+          maxLength: 500
+          example: "cita mañana 10am con Dr. Pérez"
+        user_timezone:
+          type: string
+          description: Zona horaria del usuario (IANA)
+          format: timezone
+          default: "America/Mexico_City"
+          example: "Europe/Madrid"
+        user_id:
+          type: string
+          description: ID del usuario (opcional)
+          example: "user_12345"
+
+    UpdateAppointmentRequest:
+      type: object
+      properties:
+        notas:
+          type: string
+          description: Notas adicionales
+          maxLength: 1000
+        recordatorios:
+          type: array
+          items:
+            type: object
+            properties:
+              tipo:
+                type: string
+                enum: [email, sms, whatsapp]
+              minutos_antes:
+                type: integer
+                example: 60
+
+    AppointmentCreatedResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [created]
+        appointment:
+          $ref: '#/components/schemas/AppointmentDetail'
+        trace_id:
+          type: string
+          pattern: '^trc_[a-z0-9]+$'
+          description: ID para consultar el trace de decisiones
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confianza promedio de los agentes
+        warnings:
+          type: array
+          description: Advertencias no críticas
+          items:
+            type: string
+          example: ["Hora sugerida: no se especificó hora exacta"]
+
+    AppointmentConflictResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [conflict]
+        conflict:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [full_overlap, partial_overlap, back_to_back]
+              description: Tipo de conflicto
+            conflicting_appointment_id:
+              type: string
+              description: ID de la cita que causa conflicto
+            overlapping_with:
+              type: string
+              description: Descripción del overlap
+        suggestions:
+          type: array
+          description: Alternativas sugeridas
+          items:
+            $ref: '#/components/schemas/Suggestion'
+        trace_id:
+          type: string
+
+    Suggestion:
+      type: object
+      properties:
+        rank:
+          type: integer
+          description: 1 = mejor opción
+          minimum: 1
+        fecha:
+          type: string
+          format: date
+        hora_inicio:
+          type: string
+          format: time
+        hora_fin:
+          type: string
+          format: time
+        motivo:
+          type: string
+          description: Explicación de la sugerencia
+        prioridad:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        is_available:
+          type: boolean
+          description: Confirmación de disponibilidad
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+
+    AppointmentDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^apt_[0-9]{8}_[a-z0-9]+$'
+          example: "apt_20260123_a1b2c3d4"
+        fecha:
+          type: string
+          format: date
+          example: "2026-01-23"
+        hora_inicio:
+          type: string
+          format: time
+          example: "10:00"
+        hora_fin:
+          type: string
+          format: time
+          example: "11:00"
+        contacto:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "contact_dr_perez"
+            nombre:
+              type: string
+              example: "Dr. Pérez"
+        tipo:
+          type: object
+          properties:
+            id:
+              type: string
+              example: "service_consulta_general"
+            nombre:
+              type: string
+              example: "Consulta General"
+            duracion_minutos:
+              type: integer
+              example: 60
+        estado:
+          type: string
+          enum: [pending, confirmed, cancelled, completed, no_show]
+          example: "confirmed"
+        ubicacion:
+          type: object
+          properties:
+            tipo:
+              type: string
+              enum: [consultorio, domicilio, online]
+            direccion:
+              type: string
+              nullable: true
+        notas:
+          type: string
+          nullable: true
+        recordatorios:
+          type: array
+          items:
+            type: object
+            properties:
+              tipo:
+                type: string
+                enum: [email, sms, whatsapp]
+              minutos_antes:
+                type: integer
+        metadata_validacion:
+          type: object
+          properties:
+            validado_por:
+              type: string
+              example: "validation_agent"
+            fecha_validacion:
+              type: string
+              format: date-time
+            checks_pasados:
+              type: array
+              items:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          format: timezone
+          example: "America/Mexico_City"
+
+    AppointmentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        fecha:
+          type: string
+          format: date
+        hora_inicio:
+          type: string
+          format: time
+        contacto:
+          type: object
+          properties:
+            id:
+              type: string
+            nombre:
+              type: string
+        estado:
+          type: string
+
+    DecisionTrace:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^trc_[a-z0-9]+$'
+        appointment_id:
+          type: string
+          nullable: true
+          description: Null si la cita no se creó
+        prompt_original:
+          type: string
+        decisiones:
+          type: array
+          items:
+            type: object
+            properties:
+              agente:
+                type: string
+                example: "parsing_agent"
+              decision:
+                type: string
+                example: "entity_extraction"
+              razonamiento:
+                type: string
+                example: "Detectada intención de cita médica con fecha relativa"
+              input:
+                type: object
+              output:
+                type: object
+              timestamp:
+                type: string
+                format: date-time
+        resultado_final:
+          type: object
+          properties:
+            estado:
+              type: string
+              enum: [created, conflict, failed]
+            mensaje:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Código de error
+          example: "parsing_failed"
+        message:
+          type: string
+          description: Mensaje de error
+          example: "No se pudieron extraer las entidades del prompt"
+        details:
+          type: object
+          description: Detalles adicionales del error
+          nullable: true
+        ambiguities:
+          type: array
+          description: Lista de ambigüedades detectadas
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "contacto"
+              issue:
+                type: string
+                example: "generic"
+              message:
+                type: string
+                example: "¿Con qué doctor?"
+              suggestions:
+                type: array
+                items:
+                  type: string
+        confidence:
+          type: number
+          format: float
+          nullable: true
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Autenticación JWT para endpoints protegidos
+
+security:
+  - BearerAuth: []
+
+  x-amazon-apigateway-request-validator: PARAMETER_ONLY
+  x-amazon-apigateway-gateway-responses:
+    DEFAULT_4XX:
+      statusCode: 400
+      responseTemplates:
+        application/json: |
+          {
+            "error": "bad_request",
+            "message": "$context.error.messageString"
+          }
+    DEFAULT_5XX:
+      statusCode: 500
+      responseTemplates:
+        application/json: |
+          {
+            "error": "internal_error",
+            "message": "Error interno del servidor"
+          }

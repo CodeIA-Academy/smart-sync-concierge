@@ -1,0 +1,446 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DecisionTrace",
+  "description": "Esquema de trace de decisiones de agentes para trazabilidad completa",
+  "type": "object",
+  "required": ["id", "prompt_original", "decisions", "resultado_final", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^trc_[a-z0-9]+$",
+      "description": "ID único del trace",
+      "examples": ["trc_abc123", "trc_xyz789"]
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^req_[a-z0-9]+$",
+      "description": "ID del request HTTP original"
+    },
+    "appointment_id": {
+      "type": "string",
+      "pattern": "^apt_[0-9]{8}_[a-z0-9]+$",
+      "description": "ID de la cita creada (si aplica)"
+    },
+    "prompt_original": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Prompt original del usuario",
+      "examples": ["cita mañana 10am con Dr. Pérez", "reprogramar mi cita de mañana"]
+    },
+    "user_context": {
+      "type": "object",
+      "description": "Contexto del usuario",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string",
+          "format": "timezone"
+        },
+        "locale": {
+          "type": "string",
+          "pattern": "^[a-z]{2}_[A-Z]{2}$",
+          "examples": ["es_MX", "en_US"]
+        },
+        "ip_address": {
+          "type": "string",
+          "format": "ipv4"
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "description": "Secuencia de decisiones tomadas por los agentes",
+      "items": {
+        "type": "object",
+        "required": ["agente", "decision", "razonamiento", "timestamp"],
+        "properties": {
+          "agente": {
+            "type": "string",
+            "description": "Nombre del agente",
+            "enum": ["coordinator_agent", "parsing_agent", "temporal_agent", "geo_agent", "validation_agent", "availability_agent", "negotiation_agent"]
+          },
+          "decision": {
+            "type": "string",
+            "description": "Tipo de decisión tomada",
+            "examples": ["pipeline_started", "entity_extraction", "temporal_resolution", "geo_validation", "business_rules_validation", "conflict_detection", "alternative_generation", "pipeline_completed"]
+          },
+          "decision_category": {
+            "type": "string",
+            "enum": ["extraction", "resolution", "validation", "detection", "generation", "coordination"]
+          },
+          "razonamiento": {
+            "type": "string",
+            "description": "Explicación de la decisión en lenguaje natural",
+            "examples": [
+              "Detectada intención de cita médica con fecha relativa clara",
+              "'mañana' resuelto a 2026-01-23 considerando fecha de referencia 2026-01-22 y zona horaria America/Mexico_City",
+              "Contacto 'Dr. Pérez' existe y está activo",
+              "Detectado conflicto: cita existente en mismo slot (10:00-11:00)"
+            ]
+          },
+          "input_data": {
+            "type": "object",
+            "description": "Input recibido por el agente"
+          },
+          "output_data": {
+            "type": "object",
+            "description": "Output producido por el agente"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confianza de la decisión"
+          },
+          "execution_time_ms": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Tiempo de ejecución en milisegundos"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp de la decisión"
+          },
+          "metadatos": {
+            "type": "object",
+            "description": "Metadatos adicionales específicos del agente",
+            "properties": {
+              "llm_provider": {
+                "type": "string"
+              },
+              "llm_model": {
+                "type": "string"
+              },
+              "llm_tokens_used": {
+                "type": "integer"
+              },
+              "llm_cost_usd": {
+                "type": "number"
+              },
+              "was_cached": {
+                "type": "boolean"
+              },
+              "was_retried": {
+                "type": "boolean"
+              },
+              "retry_count": {
+                "type": "integer"
+              },
+              "fallback_used": {
+                "type": "boolean"
+              }
+            }
+          },
+          "errors": {
+            "type": "array",
+            "description": "Errores ocurridos durante la ejecución",
+            "items": {
+              "type": "object",
+              "properties": {
+                "error_type": {
+                  "type": "string"
+                },
+                "error_message": {
+                  "type": "string"
+                },
+                "error_code": {
+                  "type": "string"
+                },
+                "stack_trace": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "resultado_final": {
+      "type": "object",
+      "description": "Resultado final del pipeline",
+      "properties": {
+        "estado": {
+          "type": "string",
+          "enum": ["success", "partial_success", "failed"],
+          "description": "Estado final del pipeline"
+        },
+        "outcome": {
+          "type": "string",
+          "description": "Outcome específico",
+          "enum": ["appointment_created", "conflict_detected", "validation_failed", "parsing_failed", "error"]
+        },
+        "mensaje": {
+          "type": "string",
+          "description": "Mensaje final para el usuario"
+        },
+        "cita_creada": {
+          "type": "boolean",
+          "description": "Si se creó una cita"
+        },
+        "cita_id": {
+          "type": "string",
+          "pattern": "^apt_[0-9]{8}_[a-z0-9]+$",
+          "description": "ID de la cita creada (si aplica)"
+        },
+        "conflictos_encontrados": {
+          "type": "integer",
+          "description": "Número de conflictos detectados"
+        },
+        "sugerencias_generadas": {
+          "type": "integer",
+          "description": "Número de sugerencias generadas"
+        },
+        "confianza_promedio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confianza promedio de todos los agentes"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Métricas agregadas del trace",
+      "properties": {
+        "total_execution_time_ms": {
+          "type": "integer",
+          "description": "Tiempo total de ejecución"
+        },
+        "agents_executed": {
+          "type": "integer",
+          "description": "Número de agentes ejecutados"
+        },
+        "agents_succeeded": {
+          "type": "integer",
+          "description": "Número de agentes que completaron exitosamente"
+        },
+        "agents_failed": {
+          "type": "integer",
+          "description": "Número de agentes que fallaron"
+        },
+        "total_retries": {
+          "type": "integer",
+          "description": "Número total de retries"
+        },
+        "total_fallbacks": {
+          "type": "integer",
+          "description": "Número total de fallbacks activados"
+        },
+        "total_llm_tokens": {
+          "type": "integer",
+          "description": "Total de tokens de LLM consumidos"
+        },
+        "total_cost_usd": {
+          "type": "number",
+          "description": "Costo total en USD"
+        }
+      }
+    },
+    "explanation": {
+      "type": "object",
+      "description": "Explicación legible del trace completo",
+      "properties": {
+        "resumen": {
+          "type": "string",
+          "description": "Resumen en lenguaje natural de lo que ocurrió"
+        },
+        "pasos": {
+          "type": "array",
+          "description": "Lista de pasos explicados",
+          "items": {
+            "type": "object",
+            "properties": {
+              "paso": {
+                "type": "integer"
+              },
+              "agente": {
+                "type": "string"
+              },
+              "descripcion": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "conclusion": {
+          "type": "string",
+          "description": "Conclusión del proceso"
+        }
+      }
+    },
+    "debug_info": {
+      "type": "object",
+      "description": "Información de debugging",
+      "properties": {
+        "request_headers": {
+          "type": "object",
+          "description": "Headers del request original"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["development", "staging", "production"]
+        },
+        "version": {
+          "type": "string",
+          "description": "Versión del código"
+        },
+        "hostname": {
+          "type": "string",
+          "description": "Hostname del servidor"
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de creación del trace"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de última actualización"
+    }
+  },
+  "examples": [
+    {
+      "id": "trc_abc123",
+      "request_id": "req_xyz789",
+      "appointment_id": "apt_20260123_a1b2c3d4",
+      "prompt_original": "cita mañana 10am con Dr. Pérez",
+      "user_context": {
+        "user_id": "user_12345",
+        "timezone": "America/Mexico_City",
+        "locale": "es_MX"
+      },
+      "decisions": [
+        {
+          "agente": "coordinator_agent",
+          "decision": "pipeline_started",
+          "decision_category": "coordination",
+          "razonamiento": "Iniciando pipeline de creación de cita con secuencia completa de agentes",
+          "timestamp": "2026-01-22T15:00:00Z",
+          "execution_time_ms": 5
+        },
+        {
+          "agente": "parsing_agent",
+          "decision": "entity_extraction",
+          "decision_category": "extraction",
+          "razonamiento": "Detectada intención de cita médica con fecha relativa ('mañana'), hora explícita ('10am'), y contacto claro ('Dr. Pérez')",
+          "input_data": {
+            "prompt": "cita mañana 10am con Dr. Pérez"
+          },
+          "output_data": {
+            "entities": {
+              "fecha": "mañana",
+              "hora": "10am",
+              "contacto": "Dr. Pérez",
+              "tipo": "consulta"
+            }
+          },
+          "confidence": 0.95,
+          "execution_time_ms": 1850,
+          "timestamp": "2026-01-22T15:00:00.100Z",
+          "metadatos": {
+            "llm_provider": "qwen",
+            "llm_model": "qwen-2.5",
+            "llm_tokens_used": 423,
+            "llm_cost_usd": 0.00042
+          }
+        },
+        {
+          "agente": "temporal_agent",
+          "decision": "temporal_resolution",
+          "decision_category": "resolution",
+          "razonamiento": "'mañana' resuelto a 2026-01-23 considerando fecha de referencia 2026-01-22 y zona horaria America/Mexico_City (UTC-6)",
+          "input_data": {
+            "fecha_original": "mañana",
+            "hora_original": "10am"
+          },
+          "output_data": {
+            "fecha_resuelta": "2026-01-23",
+            "hora_resuelta": "10:00",
+            "hora_utc": "16:00"
+          },
+          "confidence": 1.0,
+          "execution_time_ms": 150,
+          "timestamp": "2026-01-22T15:00:02.000Z"
+        },
+        {
+          "agente": "validation_agent",
+          "decision": "business_rules_validation",
+          "decision_category": "validation",
+          "razonamiento": "Contacto existe y está activo. Horario dentro de laborales (09:00-18:00). Anticipación suficiente (>60 min).",
+          "confidence": 1.0,
+          "execution_time_ms": 100,
+          "timestamp": "2026-01-22T15:00:02.200Z"
+        },
+        {
+          "agente": "availability_agent",
+          "decision": "conflict_detection",
+          "decision_category": "detection",
+          "razonamiento": "No se detectaron conflictos. Slot 2026-01-23 10:00-11:00 disponible para Dr. Pérez",
+          "confidence": 1.0,
+          "execution_time_ms": 200,
+          "timestamp": "2026-01-22T15:00:02.400Z"
+        },
+        {
+          "agente": "coordinator_agent",
+          "decision": "pipeline_completed",
+          "decision_category": "coordination",
+          "razonamiento": "Pipeline completado exitosamente. Todos los agentes ejecutaron sin errores. Cita lista para crear.",
+          "timestamp": "2026-01-22T15:00:02.500Z"
+        }
+      ],
+      "resultado_final": {
+        "estado": "success",
+        "outcome": "appointment_created",
+        "mensaje": "Cita creada exitosamente para el 2026-01-23 a las 10:00am con Dr. Pérez",
+        "cita_creada": true,
+        "cita_id": "apt_20260123_a1b2c3d4",
+        "conflictos_encontrados": 0,
+        "confianza_promedio": 0.97
+      },
+      "metrics": {
+        "total_execution_time_ms": 2500,
+        "agents_executed": 5,
+        "agents_succeeded": 5,
+        "agents_failed": 0,
+        "total_retries": 0,
+        "total_fallbacks": 0,
+        "total_llm_tokens": 423,
+        "total_cost_usd": 0.00042
+      },
+      "explanation": {
+        "resumen": "Proceso completado exitosamente. Se extrajeron las entidades, se resolvió la fecha relativa, se validaron las reglas de negocio y se verificó disponibilidad.",
+        "pasos": [
+          {
+            "paso": 1,
+            "agente": "parsing_agent",
+            "descripcion": "Extrajo: fecha='mañana', hora='10am', contacto='Dr. Pérez'"
+          },
+          {
+            "paso": 2,
+            "agente": "temporal_agent",
+            "descripcion": "Resolvió: 'mañana' → 2026-01-23"
+          },
+          {
+            "paso": 3,
+            "agente": "validation_agent",
+            "descripcion": "Validó: contacto existe, horario válido"
+          },
+          {
+            "paso": 4,
+            "agente": "availability_agent",
+            "descripcion": "Verificó: sin conflictos"
+          }
+        ],
+        "conclusion": "Cita confirmada para 2026-01-23 a las 10:00am con Dr. Pérez."
+      },
+      "created_at": "2026-01-22T15:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,726 @@
+openapi: 3.0.3
+info:
+  title: Smart-Sync Concierge - Contacts API
+  description: |
+    API de contactos para el sistema Smart-Sync Concierge.
+
+    ## Características
+
+    - **Gestión de Contactos**: Alta, baja y modificación de contactos
+    - **Ubicaciones Múltiples**: Un contacto puede tener múltiples ubicaciones
+    - **Disponibilidad Configurable**: Horarios personalizados por contacto
+    - **Zonas Horarias**: Soporte multi-timezone
+
+    ## Casos de Uso
+
+    1. **Administración**: Gestión completa de doctores, personal, recursos
+    2. **Sincronización**: Sincronizar con CRMs externos
+    3. **Disponibilidad**: Configurar horarios de atención
+  version: 0.1.0
+  contact:
+    name: Smart-Sync Concierge Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo local
+  - url: https://api.smartsync.example.com/api/v1
+    description: Producción
+
+tags:
+  - name: contacts
+    description: Operaciones de contactos
+
+paths:
+  /contacts/:
+    get:
+      tags: [contacts]
+      summary: Listar contactos
+      description: |
+        Obtiene lista de contactos con filtros opcionales.
+
+        Soporta:
+        - Filtrado por tipo (doctor, staff, recurso)
+        - Filtrado por ubicación
+        - Búsqueda por nombre
+        - Paginación
+      operationId: listContacts
+      parameters:
+        - name: tipo
+          in: query
+          description: Filtrar por tipo de contacto
+          required: false
+          schema:
+            type: string
+            enum: [doctor, staff, resource]
+        - name: ubicacion_id
+          in: query
+          description: Filtrar por ubicación específica
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Búsqueda por nombre o email
+          required: false
+          schema:
+            type: string
+        - name: activo
+          in: query
+          description: Filtrar solo contactos activos
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de contactos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContactSummary'
+        '401':
+          description: No autenticado
+
+    post:
+      tags: [contacts]
+      summary: Crear contacto
+      description: |
+        Crea un nuevo contacto en el sistema.
+
+        El contacto puede ser:
+        - **Doctor**: Profesional de la salud
+        - **Staff**: Personal administrativo
+        - **Resource**: Recursos físicos (salas, equipos)
+      operationId: createContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContactRequest'
+            examples:
+              doctor:
+                summary: Crear doctor
+                value:
+                  nombre: "Dra. María García"
+                  tipo: "doctor"
+                  especialidad: "Cardiología"
+                  email: "maria.garcia@clinica.example.com"
+                  telefono: "+525512345678"
+                  ubicaciones:
+                    - nombre: "Consultorio Principal"
+                      direccion: "Av. Reforma 123, CDMX"
+                      timezone: "America/Mexico_City"
+                      horario:
+                        inicio: "09:00"
+                        fin: "18:00"
+                        dias_laborales: [1, 2, 3, 4, 5]
+              recurso:
+                summary: Crear recurso
+                value:
+                  nombre: "Sala de Rayos X"
+                  tipo: "resource"
+                  categoria: "equipo_medico"
+                  ubicaciones:
+                    - nombre: "Sala RX 1"
+                      direccion: "Planta Baja"
+                      timezone: "America/Mexico_City"
+      responses:
+        '201':
+          description: Contacto creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDetail'
+        '400':
+          description: Request inválido
+        '409':
+          description: Contacto duplicado (email/nombre)
+
+  /contacts/{contact_id}/:
+    get:
+      tags: [contacts]
+      summary: Obtener detalle de contacto
+      description: Obtiene detalles completos de un contacto
+      operationId: getContact
+      parameters:
+        - name: contact_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^contact_[a-z0-9_]+$'
+      responses:
+        '200':
+          description: Detalle del contacto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDetail'
+        '404':
+          description: Contacto no encontrado
+
+    put:
+      tags: [contacts]
+      summary: Actualizar contacto
+      description: |
+        Actualiza información de un contacto.
+
+        Soporta actualización parcial (PATCH).
+      operationId: updateContact
+      parameters:
+        - name: contact_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateContactRequest'
+      responses:
+        '200':
+          description: Contacto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactDetail'
+        '404':
+          description: Contacto no encontrado
+
+    delete:
+      tags: [contacts]
+      summary: Desactivar contacto
+      description: |
+        Desactiva un contacto (soft delete).
+
+        El contacto no se elimina físicamente:
+        - Se marca como `activo: false`
+        - No aparece en búsquedas por defecto
+        - Las citas existentes se mantienen
+      operationId: deleteContact
+      parameters:
+        - name: contact_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contacto desactivado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "deactivated"
+                  message:
+                    type: string
+        '404':
+          description: Contacto no encontrado
+
+  /contacts/{contact_id}/availability/:
+    get:
+      tags: [contacts]
+      summary: Obtener disponibilidad de contacto
+      description: |
+        Obtiene el horario de disponibilidad configurado de un contacto.
+
+        Incluye:
+        - Horario laboral por cada ubicación
+        - Días laborales
+        - Excepciones (vacaciones, horarios especiales)
+      operationId: getContactAvailability
+      parameters:
+        - name: contact_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fecha_inicio
+          in: query
+          description: Fecha inicio para consultar disponibilidad
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: fecha_fin
+          in: query
+          description: Fecha fin para consultar disponibilidad
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Disponibilidad del contacto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactAvailability'
+
+    put:
+      tags: [contacts]
+      summary: Actualizar disponibilidad
+      description: |
+        Actualiza el horario de disponibilidad de un contacto.
+
+        Puede actualizar:
+        - Horario laboral general
+        - Horario por ubicación específica
+        - Excepciones temporales
+      operationId: updateContactAvailability
+      parameters:
+        - name: contact_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAvailabilityRequest'
+      responses:
+        '200':
+          description: Disponibilidad actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactAvailability'
+
+  /contacts/{contact_id}/appointments/:
+    get:
+      tags: [contacts]
+      summary: Obtener citas de contacto
+      description: |
+        Obtiene todas las citas asociadas a un contacto.
+
+        Útil para:
+        - Ver agenda de un doctor
+        - Identificar conflictos
+        - Analizar utilización
+      operationId: getContactAppointments
+      parameters:
+        - name: contact_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fecha_inicio
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: fecha_fin
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: estado
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled, completed, no_show]
+      responses:
+        '200':
+          description: Lista de citas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentReference'
+
+components:
+  schemas:
+    CreateContactRequest:
+      type: object
+      required: [nombre, tipo, ubicaciones]
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Nombre completo del contacto
+          example: "Dr. Juan Pérez"
+        tipo:
+          type: string
+          enum: [doctor, staff, resource]
+          description: Tipo de contacto
+        especialidad:
+          type: string
+          description: Especialidad (para doctores)
+          example: "Cardiología"
+        email:
+          type: string
+          format: email
+          description: Email de contacto
+          example: "juan.perez@clinica.example.com"
+        telefono:
+          type: string
+          description: Teléfono con código de país
+          example: "+525512345678"
+        categoria:
+          type: string
+          description: Categoría (para recursos)
+          example: "equipo_medico"
+        ubicaciones:
+          type: array
+          description: Ubicaciones donde está disponible
+          minItems: 1
+          items:
+            type: object
+            required: [nombre, direccion, timezone]
+            properties:
+              nombre:
+                type: string
+                example: "Consultorio Principal"
+              direccion:
+                type: string
+                example: "Av. Reforma 123, CDMX"
+              timezone:
+                type: string
+                format: timezone
+                example: "America/Mexico_City"
+              horario:
+                type: object
+                properties:
+                  inicio:
+                    type: string
+                    format: time
+                    example: "09:00"
+                  fin:
+                    type: string
+                    format: time
+                    example: "18:00"
+                  dias_laborales:
+                    type: array
+                    description: 1=lun, 5=vie
+                    items:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+                    example: [1, 2, 3, 4, 5]
+                  duracion_slot_minutos:
+                    type: integer
+                    description: Duración default de cada slot
+                    example: 60
+                  descanso_minutos:
+                    type: integer
+                    description: Minutos de descanso entre slots
+                    example: 15
+        metadatos:
+          type: object
+          description: Metadatos adicionales
+          example:
+            licencia: "123456"
+            universidad: "UNAM"
+
+    UpdateContactRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 100
+        especialidad:
+          type: string
+        email:
+          type: string
+          format: email
+        telefono:
+          type: string
+        activo:
+          type: boolean
+          description: Marcar como inactivo
+        ubicaciones:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: ID de ubicación existente para actualizar
+              nombre:
+                type: string
+              direccion:
+                type: string
+              timezone:
+                type: string
+                format: timezone
+              horario:
+                type: object
+                properties:
+                  inicio:
+                    type: string
+                    format: time
+                  fin:
+                    type: string
+                    format: time
+                  dias_laborales:
+                    type: array
+                    items:
+                      type: integer
+        metadatos:
+          type: object
+
+    ContactSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^contact_[a-z0-9_]+$'
+          example: "contact_dr_perez"
+        nombre:
+          type: string
+          example: "Dr. Juan Pérez"
+        tipo:
+          type: string
+          enum: [doctor, staff, resource]
+        especialidad:
+          type: string
+          nullable: true
+          example: "Cardiología"
+        email:
+          type: string
+          nullable: true
+        activo:
+          type: boolean
+        ubicacion_principal:
+          type: object
+          nullable: true
+          properties:
+            nombre:
+              type: string
+            direccion:
+              type: string
+        total_citas:
+          type: integer
+          description: Total de citas asociadas
+
+    ContactDetail:
+      allOf:
+        - $ref: '#/components/schemas/ContactSummary'
+        - type: object
+          properties:
+            telefono:
+              type: string
+              nullable: true
+            categoria:
+              type: string
+              nullable: true
+            ubicaciones:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  nombre:
+                    type: string
+                  direccion:
+                    type: string
+                  timezone:
+                    type: string
+                    format: timezone
+                  horario:
+                    type: object
+                    properties:
+                      inicio:
+                        type: string
+                        format: time
+                      fin:
+                        type: string
+                        format: time
+                      dias_laborales:
+                        type: array
+                        items:
+                          type: integer
+                      duracion_slot_minutos:
+                        type: integer
+                      descanso_minutos:
+                        type: integer
+            metadatos:
+              type: object
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    ContactAvailability:
+      type: object
+      properties:
+        contact_id:
+          type: string
+        contacto_nombre:
+          type: string
+        periodo:
+          type: object
+          properties:
+            fecha_inicio:
+              type: string
+              format: date
+            fecha_fin:
+              type: string
+              format: date
+        ubicaciones:
+          type: array
+          items:
+            type: object
+            properties:
+              ubicacion_id:
+                type: string
+              ubicacion_nombre:
+                type: string
+              direccion:
+                type: string
+              timezone:
+                type: string
+                format: timezone
+              horario:
+                type: object
+                properties:
+                  inicio:
+                    type: string
+                    format: time
+                  fin:
+                    type: string
+                    format: time
+                  dias_laborales:
+                    type: array
+                    items:
+                      type: integer
+                  duracion_slot_minutos:
+                    type: integer
+              excepciones:
+                type: array
+                description: Fechas sin disponibilidad (vacaciones, etc.)
+                items:
+                  type: object
+                  properties:
+                    fecha:
+                      type: string
+                      format: date
+                    motivo:
+                      type: string
+                    todo_el_dia:
+                      type: boolean
+                    inicio:
+                      type: string
+                      format: time
+                      nullable: true
+                    fin:
+                      type: string
+                      format: time
+                      nullable: true
+
+    UpdateAvailabilityRequest:
+      type: object
+      properties:
+        ubicacion_id:
+          type: string
+          description: ID de ubicación a actualizar (null = todas)
+        horario:
+          type: object
+          properties:
+            inicio:
+              type: string
+              format: time
+            fin:
+              type: string
+              format: time
+            dias_laborales:
+              type: array
+              items:
+                type: integer
+            duracion_slot_minutos:
+              type: integer
+            descanso_minutos:
+              type: integer
+        excepciones:
+          type: array
+          items:
+            type: object
+            properties:
+              fecha:
+                type: string
+                format: date
+              motivo:
+                type: string
+              todo_el_dia:
+                type: boolean
+              inicio:
+                type: string
+                format: time
+              fin:
+                type: string
+                format: time
+
+    AppointmentReference:
+      type: object
+      properties:
+        id:
+          type: string
+        fecha:
+          type: string
+          format: date
+        hora_inicio:
+          type: string
+          format: time
+        hora_fin:
+          type: string
+          format: time
+        estado:
+          type: string
+        ubicacion:
+          type: object
+          properties:
+            nombre:
+              type: string
+        tipo:
+          type: object
+          properties:
+            nombre:
+              type: string
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

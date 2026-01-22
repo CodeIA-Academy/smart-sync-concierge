@@ -1,0 +1,657 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SharedContext",
+  "description": "Esquema del contexto compartido entre agentes en el pipeline",
+  "type": "object",
+  "required": ["context_id", "version", "created_at", "data"],
+  "properties": {
+    "context_id": {
+      "type": "string",
+      "pattern": "^ctx_[a-z0-9]+$",
+      "description": "ID único del contexto",
+      "examples": ["ctx_abc123"]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Versión del contexto (se incrementa con cada update)"
+    },
+    "trace_id": {
+      "type": "string",
+      "pattern": "^trc_[a-z0-9]+$",
+      "description": "ID del trace asociado"
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^req_[a-z0-9]+$",
+      "description": "ID del request HTTP original"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de creación del contexto"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de última actualización"
+    },
+    "data": {
+      "type": "object",
+      "description": "Datos del contexto compartido, organizados por agente",
+      "properties": {
+        "user_prompt": {
+          "type": "object",
+          "description": "Input original del usuario",
+          "properties": {
+            "prompt": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "user_timezone": {
+              "type": "string",
+              "format": "timezone"
+            },
+            "user_id": {
+              "type": "string"
+            },
+            "locale": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "object"
+            }
+          },
+          "required": ["prompt"]
+        },
+        "parsing_agent": {
+          "type": "object",
+          "description": "Output del ParsingAgent",
+          "properties": {
+            "entities": {
+              "type": "object",
+              "properties": {
+                "fecha": {
+                  "oneOf": [
+                    {"type": "string"},
+                    {
+                      "type": "object",
+                      "properties": {
+                        "original": {"type": "string"},
+                        "type": {"type": "string"},
+                        "value": {"type": "string", "format": "date"}
+                      }
+                    }
+                  ]
+                },
+                "hora": {
+                  "type": "string"
+                },
+                "duracion": {
+                  "type": "integer",
+                  "description": "Duración en minutos"
+                },
+                "contacto": {
+                  "type": "string"
+                },
+                "tipo_cita": {
+                  "type": "string"
+                },
+                "ubicacion": {
+                  "type": "string"
+                },
+                "notas": {
+                  "type": "string"
+                }
+              }
+            },
+            "intent": {
+              "type": "string",
+              "enum": ["create_appointment", "reschedule", "cancel", "query"]
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "ambiguities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {"type": "string"},
+                  "issue": {"type": "string"},
+                  "message": {"type": "string"},
+                  "suggestions": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  }
+                }
+              }
+            },
+            "processing_time_ms": {
+              "type": "integer"
+            },
+            "llm_tokens_used": {
+              "type": "integer"
+            }
+          }
+        },
+        "temporal_agent": {
+          "type": "object",
+          "description": "Output del TemporalAgent",
+          "properties": {
+            "resolved_start": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "resolved_end": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "original_timezone": {
+              "type": "string",
+              "format": "timezone"
+            },
+            "is_valid": {
+              "type": "boolean"
+            },
+            "validation_errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "enum": ["outside_hours", "holiday", "too_soon", "too_late", "non_business_day"]
+                  },
+                  "field": {"type": "string"},
+                  "message": {"type": "string"},
+                  "suggestion": {"type": "string"}
+                }
+              }
+            },
+            "reasoning": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "geo_agent": {
+          "type": "object",
+          "description": "Output del GeoAgent",
+          "properties": {
+            "user_location": {
+              "type": "object",
+              "properties": {
+                "country": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{2}$"
+                },
+                "country_name": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "timezone": {
+                  "type": "string",
+                  "format": "timezone"
+                },
+                "coordinates": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {"type": "number"},
+                    "lng": {"type": "number"}
+                  }
+                }
+              }
+            },
+            "user_timezone": {
+              "type": "string",
+              "format": "timezone"
+            },
+            "contact_matched": {
+              "type": "object",
+              "properties": {
+                "contact_id": {"type": "string"},
+                "nombre": {"type": "string"},
+                "ubicacion_id": {"type": "string"}
+              }
+            },
+            "is_geo_coherent": {
+              "type": "boolean",
+              "description": "Si la ubicación es coherente"
+            },
+            "distance_km": {
+              "type": "number",
+              "description": "Distancia en km (si aplica)"
+            },
+            "confidence": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "validation_agent": {
+          "type": "object",
+          "description": "Output del ValidationAgent",
+          "properties": {
+            "is_valid": {
+              "type": "boolean"
+            },
+            "validation_results": {
+              "type": "object",
+              "properties": {
+                "contacto_valido": {
+                  "type": "boolean"
+                },
+                "servicio_valido": {
+                  "type": "boolean"
+                },
+                "anticipacion_valida": {
+                  "type": "boolean"
+                },
+                "dia_laboral_valido": {
+                  "type": "boolean"
+                },
+                "horario_valido": {
+                  "type": "boolean"
+                },
+                "festivo_valido": {
+                  "type": "boolean"
+                },
+                "descanso_valido": {
+                  "type": "boolean"
+                }
+              },
+              "required": ["contacto_valido", "servicio_valido", "anticipacion_valida", "dia_laboral_valido", "horario_valido"]
+            },
+            "validation_errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "check": {"type": "string"},
+                  "passed": {"type": "boolean"},
+                  "error_code": {"type": "string"},
+                  "error_message": {"type": "string"},
+                  "suggestion": {"type": "string"}
+                }
+              }
+            },
+            "business_rules_applied": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "availability_agent": {
+          "type": "object",
+          "description": "Output del AvailabilityAgent",
+          "properties": {
+            "is_available": {
+              "type": "boolean"
+            },
+            "conflicts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "conflicting_appointment_id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["full_overlap", "partial_overlap", "back_to_back"]
+                  },
+                  "overlap_duration_minutes": {
+                    "type": "integer"
+                  },
+                  "conflicting_with": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "existing_appointments": {
+              "type": "array",
+              "description": "Citas existentes en el mismo día",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {"type": "string"},
+                  "hora_inicio": {"type": "string", "format": "time"},
+                  "hora_fin": {"type": "string", "format": "time"}
+                }
+              }
+            }
+          }
+        },
+        "negotiation_agent": {
+          "type": "object",
+          "description": "Output del NegotiationAgent (si se ejecutó)",
+          "properties": {
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "rank": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "fecha": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "hora_inicio": {
+                    "type": "string",
+                    "format": "time"
+                  },
+                  "hora_fin": {
+                    "type": "string",
+                    "format": "time"
+                  },
+                  "contacto_id": {
+                    "type": "string"
+                  },
+                  "motivo": {
+                    "type": "string"
+                  },
+                  "prioridad": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "distance_from_original": {
+                    "type": "string"
+                  },
+                  "is_available": {
+                    "type": "boolean"
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  }
+                }
+              }
+            },
+            "negotiation_strategy": {
+              "type": "string"
+            },
+            "total_suggestions": {
+              "type": "integer"
+            },
+            "best_suggestion_rank": {
+              "type": "integer"
+            },
+            "reasoning": {
+              "type": "string"
+            }
+          }
+        },
+        "business_rules": {
+          "type": "object",
+          "description": "Reglas de negocio aplicables",
+          "properties": {
+            "horario_laboral": {
+              "type": "object",
+              "properties": {
+                "inicio": {
+                  "type": "string",
+                  "pattern": "^[0-9]{2}:[0-9]{2}$"
+                },
+                "fin": {
+                  "type": "string",
+                  "pattern": "^[0-9]{2}:[0-9]{2}$"
+                }
+              }
+            },
+            "dias_laborales": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 7
+              }
+            },
+            "anticipacion_minima_minutos": {
+              "type": "integer"
+            },
+            "anticipacion_maxima_dias": {
+              "type": "integer"
+            },
+            "festivos": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          }
+        },
+        "reference_date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Fecha de referencia para resolución temporal"
+        },
+        "candidate_appointment": {
+          "type": "object",
+          "description": "Cita candidata a crear",
+          "properties": {
+            "fecha": {
+              "type": "string",
+              "format": "date"
+            },
+            "hora_inicio": {
+              "type": "string",
+              "format": "time"
+            },
+            "hora_fin": {
+              "type": "string",
+              "format": "time"
+            },
+            "contacto_id": {
+              "type": "string"
+            },
+            "tipo_cita_id": {
+              "type": "string"
+            },
+            "ubicacion": {
+              "type": "object"
+            },
+            "timezone": {
+              "type": "string",
+              "format": "timezone"
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Metadatos adicionales",
+          "properties": {
+            "pipeline_type": {
+              "type": "string",
+              "enum": ["appointment_creation", "rescheduling", "cancellation", "query"]
+            },
+            "agent_sequence": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "current_agent_index": {
+              "type": "integer"
+            },
+            "total_agents": {
+              "type": "integer"
+            },
+            "debug_mode": {
+              "type": "boolean"
+            },
+            "dry_run": {
+              "type": "boolean",
+              "description": "Si es un dry-run (sin crear cita)"
+            }
+          }
+        }
+      }
+    },
+    "history": {
+      "type": "array",
+      "description": "Historial de cambios del contexto",
+      "items": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer"
+          },
+          "updated_by": {
+            "type": "string",
+            "description": "Agente que hizo el update"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "changes": {
+            "type": "object",
+            "description": "Cambios realizados"
+          }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "context_id": "ctx_abc123",
+      "version": 5,
+      "trace_id": "trc_xyz789",
+      "request_id": "req_def456",
+      "created_at": "2026-01-22T15:00:00Z",
+      "updated_at": "2026-01-22T15:00:03Z",
+      "data": {
+        "user_prompt": {
+          "prompt": "cita mañana 10am con Dr. Pérez",
+          "user_timezone": "America/Mexico_City",
+          "locale": "es_MX"
+        },
+        "parsing_agent": {
+          "entities": {
+            "fecha": {"original": "mañana", "type": "relative"},
+            "hora": "10am",
+            "duracion": 60,
+            "contacto": "Dr. Pérez",
+            "tipo_cita": "consulta"
+          },
+          "intent": "create_appointment",
+          "confidence": 0.95,
+          "ambiguities": []
+        },
+        "temporal_agent": {
+          "resolved_start": "2026-01-23T16:00:00Z",
+          "resolved_end": "2026-01-23T17:00:00Z",
+          "original_timezone": "America/Mexico_City",
+          "is_valid": true,
+          "validation_errors": [],
+          "reasoning": "'mañana' resuelto a 2026-01-23",
+          "confidence": 1.0
+        },
+        "geo_agent": {
+          "user_location": {
+            "country": "MX",
+            "country_name": "Mexico",
+            "city": "Mexico City",
+            "timezone": "America/Mexico_City"
+          },
+          "user_timezone": "America/Mexico_City",
+          "contact_matched": {
+            "contact_id": "contact_dr_perez",
+            "nombre": "Dr. Pérez"
+          },
+          "is_geo_coherent": true,
+          "confidence": 1.0
+        },
+        "validation_agent": {
+          "is_valid": true,
+          "validation_results": {
+            "contacto_valido": true,
+            "servicio_valido": true,
+            "anticipacion_valida": true,
+            "dia_laboral_valido": true,
+            "horario_valido": true
+          },
+          "validation_errors": []
+        },
+        "availability_agent": {
+          "is_available": true,
+          "conflicts": []
+        },
+        "candidate_appointment": {
+          "fecha": "2026-01-23",
+          "hora_inicio": "10:00",
+          "hora_fin": "11:00",
+          "contacto_id": "contact_dr_perez",
+          "timezone": "America/Mexico_City"
+        },
+        "reference_date": "2026-01-22T15:00:00Z",
+        "metadata": {
+          "pipeline_type": "appointment_creation",
+          "agent_sequence": [
+            "parsing_agent",
+            "temporal_agent",
+            "geo_agent",
+            "validation_agent",
+            "availability_agent"
+          ],
+          "current_agent_index": 5,
+          "total_agents": 5,
+          "debug_mode": false,
+          "dry_run": false
+        }
+      },
+      "history": [
+        {
+          "version": 1,
+          "updated_by": "coordinator_agent",
+          "timestamp": "2026-01-22T15:00:00Z",
+          "changes": {"user_prompt": "initialized"}
+        },
+        {
+          "version": 2,
+          "updated_by": "parsing_agent",
+          "timestamp": "2026-01-22T15:00:02Z",
+          "changes": {"parsing_agent": "completed"}
+        },
+        {
+          "version": 3,
+          "updated_by": "temporal_agent",
+          "timestamp": "2026-01-22T15:00:02.200Z",
+          "changes": {"temporal_agent": "completed"}
+        },
+        {
+          "version": 4,
+          "updated_by": "geo_agent",
+          "timestamp": "2026-01-22T15:00:02.400Z",
+          "changes": {"geo_agent": "completed"}
+        },
+        {
+          "version": 5,
+          "updated_by": "validation_agent",
+          "timestamp": "2026-01-22T15:00:02.600Z",
+          "changes": {"validation_agent": "completed"}
+        }
+      ]
+    }
+  ]
+}

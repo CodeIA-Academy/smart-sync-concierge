@@ -1,0 +1,393 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Service",
+  "description": "Esquema de un servicio en Smart-Sync Concierge (tipos de cita)",
+  "type": "object",
+  "required": ["id", "nombre", "categoria", "duracion_minutos", "activo", "created_at"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^service_[a-z0-9_]+$",
+      "description": "ID único del servicio",
+      "examples": ["service_consulta_general", "service_cardiologia", "service_laboratorio"]
+    },
+    "nombre": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 100,
+      "description": "Nombre del servicio",
+      "examples": ["Consulta General", "Cardiología", "Análisis de Laboratorio"]
+    },
+    "descripcion": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Descripción detallada del servicio"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": ["medica", "odontologia", "laboratorio", "imagen", "terapia", "otra"],
+      "description": "Categoría del servicio"
+    },
+    "subcategoria": {
+      "type": "string",
+      "description": "Subcategoría específica",
+      "examples": ["cardiologia_pediatrica", "ortodoncia", "ecografia"]
+    },
+    "duracion_minutos": {
+      "type": "integer",
+      "minimum": 15,
+      "maximum": 480,
+      "description": "Duración default en minutos",
+      "examples": [30, 45, 60, 90, 120]
+    },
+    "duracion_minima_minutos": {
+      "type": "integer",
+      "minimum": 15,
+      "description": "Duración mínima permitida"
+    },
+    "duracion_maxima_minutos": {
+      "type": "integer",
+      "maximum": 480,
+      "description": "Duración máxima permitida"
+    },
+    "permite_sobrecupo": {
+      "type": "boolean",
+      "description": "Si permite múltiples citas simultáneas",
+      "default": false
+    },
+    "maximo_simultaneo": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Máximo de citas simultáneas (si permite_sobrecupo)"
+    },
+    "activo": {
+      "type": "boolean",
+      "description": "Si el servicio está activo",
+      "default": true
+    },
+    "requerimientos": {
+      "type": "object",
+      "description": "Requerimientos específicos del servicio",
+      "properties": {
+        "contacto_tipo": {
+          "type": "string",
+          "enum": ["doctor", "staff", "resource", "cualquiera"],
+          "description": "Tipo de contacto requerido"
+        },
+        "contacto_especialidad": {
+          "type": "string",
+          "description": "Especialidad requerida del contacto"
+        },
+        "ubicacion_tipo": {
+          "type": "string",
+          "enum": ["consultorio", "sala", "laboratorio", "cualquiera"],
+          "description": "Tipo de ubicación requerida"
+        },
+        "equipos": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Equipos necesarios"
+        },
+        "preparacion_previa": {
+          "type": "boolean",
+          "description": "Si requiere preparación previa del paciente"
+        },
+        "instrucciones_preparacion": {
+          "type": "string",
+          "description": "Instrucciones de preparación"
+        }
+      }
+    },
+    "precio": {
+      "type": "object",
+      "description": "Información de precio",
+      "properties": {
+        "monto": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Monto del precio"
+        },
+        "moneda": {
+          "type": "string",
+          "default": "MXN",
+          "pattern": "^[A-Z]{3}$",
+          "description": "Código de moneda (ISO 4217)"
+        },
+        "incluye": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Qué está incluido en el precio"
+        },
+        "variables": {
+          "type": "boolean",
+          "description": "Si el precio varía según factores"
+        },
+        "factores_variacion": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Factores que afectan el precio",
+          "examples": [["duracion", "urgencia", "tipo_contacto"]]
+        }
+      }
+    },
+    "politicas": {
+      "type": "object",
+      "description": "Políticas del servicio",
+      "properties": {
+        "cancelacion_anticipacion_horas": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Horas de anticipación para cancelar sin cargo",
+          "default": 24
+        },
+        "reprogramacion_anticipacion_horas": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Horas de anticipación para reprogramar sin cargo",
+          "default": 24
+        },
+        "penalidad_cancelacion": {
+          "type": "object",
+          "properties": {
+            "tipo": {
+              "type": "string",
+              "enum": ["porcentaje", "fijo", "ninguna"]
+            },
+            "monto": {
+              "type": "number",
+              "minimum": 0
+            },
+            "porcentaje": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        },
+        "permite_urgencia": {
+          "type": "boolean",
+          "description": "Si permite agendar como urgente"
+        },
+        "anticipacion_urgencia_minutos": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Anticipación mínima para urgencia"
+        }
+      }
+    },
+    "disponibilidad": {
+      "type": "object",
+      "description": "Configuración de disponibilidad",
+      "properties": {
+        "dias_anticipacion_maxima": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Días máximos de anticipación para agendar",
+          "default": 90
+        },
+        "minimo_anticipacion_horas": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Horas mínimas de anticipación",
+          "default": 1
+        },
+        "horas_permitidas": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "inicio": {
+                "type": "string",
+                "pattern": "^[0-9]{2}:[0-9]{2}$"
+              },
+              "fin": {
+                "type": "string",
+                "pattern": "^[0-9]{2}:[0-9]{2}$"
+              }
+            }
+          },
+          "description": "Horarios permitidos (vacío = cualquier hora)"
+        },
+        "dias_no_permitidos": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 7
+          },
+          "description": "Días no permitidos (1=lun, ..., 7=dom)"
+        }
+      }
+    },
+    "recordatorios_config": {
+      "type": "object",
+      "description": "Configuración de recordatorios",
+      "properties": {
+        "activo": {
+          "type": "boolean",
+          "default": true
+        },
+        "recordatorios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "minutos_antes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "canales": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": ["email", "sms", "whatsapp", "push"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "metadatos": {
+      "type": "object",
+      "description": "Metadatos adicionales",
+      "properties": {
+        "codigo_cie": {
+          "type": "string",
+          "description": "Código CIE-11 (si aplica)"
+        },
+        "requiere_autorizacion": {
+          "type": "boolean",
+          "description": "Si requiere autorización previa"
+        },
+        "frecuencia_recomendada": {
+          "type": "string",
+          "description": "Frecuencia recomendada de cita",
+          "examples": ["unica", "semanal", "mensual", "anual"]
+        },
+        "notas_internas": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "estadisticas": {
+      "type": "object",
+      "description": "Estadísticas del servicio",
+      "properties": {
+        "total_citas": {
+          "type": "integer"
+        },
+        "citas_completadas": {
+          "type": "integer"
+        },
+        "citas_canceladas": {
+          "type": "integer"
+        },
+        "tasa_completitud": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "duracion_promedio_minutos": {
+          "type": "number"
+        },
+        "ultima_cita": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de creación"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha de última actualización"
+    }
+  },
+  "examples": [
+    {
+      "id": "service_consulta_general",
+      "nombre": "Consulta General",
+      "descripcion": "Consulta médica general con diagnóstico y tratamiento",
+      "categoria": "medica",
+      "subcategoria": "medicina_general",
+      "duracion_minutos": 60,
+      "duracion_minima_minutos": 30,
+      "duracion_maxima_minutos": 90,
+      "activo": true,
+      "requerimientos": {
+        "contacto_tipo": "doctor",
+        "ubicacion_tipo": "consultorio"
+      },
+      "precio": {
+        "monto": 500,
+        "moneda": "MXN",
+        "incluye": ["consulta", "diagnostico", "receta"],
+        "variables": false
+      },
+      "politicas": {
+        "cancelacion_anticipacion_horas": 24,
+        "reprogramacion_anticipacion_horas": 24,
+        "penalidad_cancelacion": {
+          "tipo": "porcentaje",
+          "porcentaje": 50
+        },
+        "permite_urgencia": true,
+        "anticipacion_urgencia_minutos": 120
+      },
+      "disponibilidad": {
+        "dias_anticipacion_maxima": 90,
+        "minimo_anticipacion_horas": 1
+      },
+      "recordatorios_config": {
+        "activo": true,
+        "recordatorios": [
+          {
+            "minutos_antes": 1440,
+            "canales": ["whatsapp", "email"]
+          },
+          {
+            "minutos_antes": 60,
+            "canales": ["whatsapp"]
+          }
+        ]
+      },
+      "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "service_laboratorio_sangre",
+      "nombre": "Análisis de Laboratorio (Sangre)",
+      "descripcion": "Análisis completo de sangre con biometría y química",
+      "categoria": "laboratorio",
+      "duracion_minutos": 15,
+      "activo": true,
+      "requerimientos": {
+        "contacto_tipo": "staff",
+        "ubicacion_tipo": "laboratorio",
+        "preparacion_previa": true,
+        "instrucciones_preparacion": "Ayuno de 8 horas previas"
+      },
+      "precio": {
+        "monto": 350,
+        "moneda": "MXN",
+        "variables": false
+      },
+      "politicas": {
+        "cancelacion_anticipacion_horas": 4,
+        "permite_urgencia": false
+      },
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ]
+}

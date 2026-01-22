@@ -1,0 +1,736 @@
+openapi: 3.0.3
+info:
+  title: Smart-Sync Concierge - Agents API
+  description: |
+    API interna para ejecución y monitoreo de agentes.
+
+    ## Propósito
+
+    Esta API está diseñada para:
+    - **Testing**: Ejecutar agentes individualmente
+    - **Debugging**: Inspeccionar estado y decisiones
+    - **Observabilidad**: Monitorear métricas y performance
+    - **Mantenimiento**: Recalcular y reparar datos
+
+    ## Uso
+
+    La API de agentes es principalmente **interna**.
+    Los usuarios normales interactúan a través de la API de citas.
+
+    ## Arquitectura de Agentes
+
+    ```
+    Usuario → POST /appointments/
+              ↓
+    CoordinatorAgent
+      ↓ ↓ ↓ ↓ ↓
+    ParsingAgent → TemporalAgent → GeoAgent → ValidationAgent → AvailabilityAgent → NegotiationAgent
+    ```
+
+    Cada agente es especializado e independiente.
+  version: 0.1.0
+  contact:
+    name: Smart-Sync Concierge Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api/v1/internal
+    description: Desarrollo local
+  - url: https://api.smartsync.example.com/api/v1/internal
+    description: Producción (requerir autenticación admin)
+
+tags:
+  - name: agents
+    description: Ejecución de agentes
+  - name: traces
+    description: Trazabilidad de decisiones
+  - name: metrics
+    description: Métricas de agentes
+
+paths:
+  /agents/:
+    get:
+      tags: [agents]
+      summary: Listar agentes disponibles
+      description: |
+        Obtiene lista de todos los agentes registrados en el sistema.
+
+        Incluye:
+        - Nombre y versión
+        - Estado (activo/inactivo)
+        - Configuración
+        - Dependencias
+      operationId: listAgents
+      responses:
+        '200':
+          description: Lista de agentes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AgentInfo'
+
+  /agents/{agent_name}/execute:
+    post:
+      tags: [agents]
+      summary: Ejecutar agente individualmente
+      description: |
+        Ejecuta un agente específico con input proporcionado.
+
+        ## Casos de Uso
+
+        - **Testing**: Probar cambios en un agente
+        - **Debugging**: Ver output específico de un agente
+        - **Aislamiento**: Ejecutar sin el pipeline completo
+
+        ## Agentes Disponibles
+
+        - `parsing_agent`: Extracción de entidades
+        - `temporal_agent`: Resolución temporal
+        - `geo_agent`: Validación geográfica
+        - `validation_agent`: Reglas de negocio
+        - `availability_agent`: Detección de conflictos
+        - `negotiation_agent`: Generación de alternativas
+      operationId: executeAgent
+      parameters:
+        - name: agent_name
+          in: path
+          required: true
+          description: Nombre del agente a ejecutar
+          schema:
+            type: string
+            enum: [parsing_agent, temporal_agent, geo_agent, validation_agent, availability_agent, negotiation_agent]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ParsingAgentInput'
+                - $ref: '#/components/schemas/TemporalAgentInput'
+                - $ref: '#/components/schemas/GeoAgentInput'
+                - $ref: '#/components/schemas/ValidationAgentInput'
+                - $ref: '#/components/schemas/AvailabilityAgentInput'
+                - $ref: '#/components/schemas/NegotiationAgentInput'
+            examples:
+              parsing:
+                summary: ParsingAgent
+                value:
+                  prompt: "cita mañana 10am con Dr. Pérez"
+                  reference_date: "2026-01-22T15:00:00Z"
+                  user_timezone: "America/Mexico_City"
+              temporal:
+                summary: TemporalAgent
+                value:
+                  entities:
+                    fecha: "mañana"
+                    hora: "10am"
+                    duracion: 60
+                  reference_date: "2026-01-22T15:00:00Z"
+                  user_timezone: "America/Mexico_City"
+              validation:
+                summary: ValidationAgent
+                value:
+                  candidate_appointment:
+                    fecha: "2026-01-23"
+                    hora_inicio: "10:00"
+                    contacto_id: "contact_dr_perez"
+                  business_rules:
+                    anticipacion_minima_minutos: 60
+                    anticipacion_maxima_dias: 90
+      responses:
+        '200':
+          description: Agente ejecutado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agent:
+                    type: string
+                    example: "parsing_agent"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  execution_time_ms:
+                    type: integer
+                    description: Tiempo de ejecución en milisegundos
+                  output:
+                    type: object
+                    description: Output específico del agente
+                  decision:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Tipo de decisión tomada
+                      reasoning:
+                        type: string
+                        description: Explicación de la decisión
+                  confidence:
+                    type: number
+                    format: float
+                    minimum: 0
+                    maximum: 1
+                  trace_id:
+                    type: string
+                    description: ID del trace de esta ejecución
+        '400':
+          description: Input inválido para el agente
+        '404':
+          description: Agente no encontrado
+
+  /agents/{agent_name}/config:
+    get:
+      tags: [agents]
+      summary: Obtener configuración de agente
+      description: |
+        Obtiene la configuración actual de un agente.
+
+        Incluye:
+        - Prompt template
+        - Hiperparámetros
+        - Thresholds
+        - Configuración de LLM
+      operationId: getAgentConfig
+      parameters:
+        - name: agent_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Configuración del agente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConfig'
+        '404':
+          description: Agente no encontrado
+
+    put:
+      tags: [agents]
+      summary: Actualizar configuración de agente
+      description: |
+        Actualiza la configuración de un agente.
+
+        ⚠️ **Cuidado**: Los cambios afectan todas las ejecuciones futuras.
+      operationId: updateAgentConfig
+      parameters:
+        - name: agent_name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt_template:
+                  type: string
+                  description: Nuevo template de prompt
+                llm_config:
+                  type: object
+                  properties:
+                    temperature:
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 2
+                    max_tokens:
+                      type: integer
+                    model:
+                      type: string
+                thresholds:
+                  type: object
+                  description: Umbrales de decisión
+                  example:
+                    confidence_min: 0.7
+                    ambiguity_max: 0.3
+      responses:
+        '200':
+          description: Configuración actualizada
+        '400':
+          description: Configuración inválida
+        '403':
+          description: Permisos insuficientes
+
+  /agents/pipeline/execute:
+    post:
+      tags: [agents]
+      summary: Ejecutar pipeline completo
+      description: |
+        Ejecuta el pipeline completo de agentes (CoordinatorAgent).
+
+        Es lo mismo que llamar a `POST /appointments/` pero retorna
+        información adicional de debugging.
+      operationId: executePipeline
+      parameters:
+        - name: verbose
+          in: query
+          description: Incluir output de cada agente
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: trace
+          in: query
+          description: Incluir trace completo de decisiones
+          required: false
+          schema:
+            type: boolean
+            default: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  minLength: 5
+                  maxLength: 500
+                user_timezone:
+                  type: string
+                  format: timezone
+                agent_sequence:
+                  type: array
+                  description: Secuencia personalizada de agentes (default: todos)
+                  items:
+                    type: string
+                  example: ["parsing_agent", "temporal_agent", "validation_agent"]
+      responses:
+        '200':
+          description: Pipeline ejecutado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [created, conflict, failed]
+                  total_execution_time_ms:
+                    type: integer
+                  agent_outputs:
+                    type: array
+                    description: Output de cada agente (si verbose=true)
+                    items:
+                      type: object
+                      properties:
+                        agent:
+                          type: string
+                        execution_time_ms:
+                          type: integer
+                        output:
+                          type: object
+                  trace:
+                    $ref: '#/components/schemas/DecisionTrace'
+                  result:
+                    oneOf:
+                      - $ref: '#/components/schemas/AppointmentCreatedResult'
+                      - $ref: '#/components/schemas/AppointmentConflictResult'
+        '400':
+          description: Input inválido
+
+  /traces/:
+    get:
+      tags: [traces]
+      summary: Listar traces
+      description: |
+        Obtiene lista de traces de decisiones con filtros.
+      operationId: listTraces
+      parameters:
+        - name: agent_name
+          in: query
+          description: Filtrar por agente específico
+          schema:
+            type: string
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: status
+          in: query
+          description: Filtrar por estado final
+          schema:
+            type: string
+            enum: [success, failed, partial]
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Lista de traces
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TraceSummary'
+
+  /traces/{trace_id}/:
+    get:
+      tags: [traces]
+      summary: Obtener trace completo
+      description: |
+        Obtiene el trace completo de decisiones con explicaciones.
+      operationId: getTrace
+      parameters:
+        - name: trace_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^trc_[a-z0-9]+$'
+        - name: explain
+          in: query
+          description: Incluir explicación legible
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Trace obtenido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionTrace'
+        '404':
+          description: Trace no encontrado
+
+  /metrics/agents:
+    get:
+      tags: [metrics]
+      summary: Obtener métricas de agentes
+      description: |
+        Obtiene métricas agregadas de todos los agentes.
+
+        Incluye:
+        - Tasa de éxito
+        - Tiempo promedio de ejecución
+        - Tokens consumidos
+        - Errores por tipo
+      operationId: getAgentMetrics
+      parameters:
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: agent_name
+          in: query
+          schema:
+            type: string
+        - name: granularity
+          in: query
+          description: Granularidad de agregación
+          schema:
+            type: string
+            enum: [hour, day, week]
+            default: day
+      responses:
+        '200':
+          description: Métricas obtenidas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: object
+                    properties:
+                      start:
+                        type: string
+                        format: date-time
+                      end:
+                        type: string
+                        format: date-time
+                  agents:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        total_executions:
+                          type: integer
+                        success_rate:
+                          type: number
+                          format: float
+                        avg_execution_time_ms:
+                          type: number
+                          format: float
+                        p95_execution_time_ms:
+                          type: integer
+                        total_tokens_used:
+                          type: integer
+                        avg_tokens_per_request:
+                          type: number
+                          format: float
+                        errors:
+                          type: object
+                          additionalProperties:
+                            type: integer
+
+components:
+  schemas:
+    AgentInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "parsing_agent"
+        version:
+          type: string
+          example: "1.0.0"
+        description:
+          type: string
+          example: "Extrae entidades del prompt"
+        active:
+          type: boolean
+        dependencies:
+          type: array
+          items:
+            type: string
+          example: []
+        llm_provider:
+          type: string
+          enum: [qwen, claude, openai]
+          example: "qwen"
+
+    AgentConfig:
+      type: object
+      properties:
+        agent_name:
+          type: string
+        version:
+          type: string
+        prompt_template:
+          type: string
+          description: Template de prompt (puede incluir {variables})
+        llm_config:
+          type: object
+          properties:
+            provider:
+              type: string
+            model:
+              type: string
+            temperature:
+              type: number
+              format: float
+            max_tokens:
+              type: integer
+        thresholds:
+          type: object
+          description: Umbrales de decisión
+          additionalProperties:
+            type: number
+        recovery_config:
+          type: object
+          properties:
+            recoverable:
+              type: boolean
+            fallback_agent:
+              type: string
+              nullable: true
+            max_retries:
+              type: integer
+
+    # Agent Inputs
+    ParsingAgentInput:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+        reference_date:
+          type: string
+          format: date-time
+        user_timezone:
+          type: string
+          format: timezone
+
+    TemporalAgentInput:
+      type: object
+      required: [entities]
+      properties:
+        entities:
+          type: object
+        reference_date:
+          type: string
+          format: date-time
+        user_timezone:
+          type: string
+          format: timezone
+
+    GeoAgentInput:
+      type: object
+      required: [entities]
+      properties:
+        entities:
+          type: object
+        user_id:
+          type: string
+          nullable: true
+        contacts:
+          type: array
+          items:
+            type: object
+
+    ValidationAgentInput:
+      type: object
+      required: [candidate_appointment]
+      properties:
+        candidate_appointment:
+          type: object
+        business_rules:
+          type: object
+
+    AvailabilityAgentInput:
+      type: object
+      required: [candidate_appointment]
+      properties:
+        candidate_appointment:
+          type: object
+        business_rules:
+          type: object
+
+    NegotiationAgentInput:
+      type: object
+      required: [original_request, conflict]
+      properties:
+        original_request:
+          type: object
+        conflict:
+          type: object
+        user_constraints:
+          type: object
+          nullable: true
+
+    # Results
+    AppointmentCreatedResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [created]
+        appointment:
+          type: object
+        confidence:
+          type: number
+
+    AppointmentConflictResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [conflict]
+        conflict:
+          type: object
+        suggestions:
+          type: array
+          items:
+            type: object
+
+    # Traces
+    DecisionTrace:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^trc_[a-z0-9]+$'
+        prompt_original:
+          type: string
+        user_timezone:
+          type: string
+        decisions:
+          type: array
+          items:
+            type: object
+            properties:
+              agent:
+                type: string
+              decision:
+                type: string
+              reasoning:
+                type: string
+              input:
+                type: object
+              output:
+                type: object
+              confidence:
+                type: number
+              execution_time_ms:
+                type: integer
+              timestamp:
+                type: string
+                format: date-time
+        resultado_final:
+          type: object
+          properties:
+            status:
+              type: string
+            mensaje:
+              type: string
+        explanation:
+          type: string
+          description: Explicación legible del trace
+        created_at:
+          type: string
+          format: date-time
+
+    TraceSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        prompt:
+          type: string
+          maxLength: 100
+        status:
+          type: string
+          enum: [success, failed, partial]
+        agents_executed:
+          type: integer
+        total_time_ms:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

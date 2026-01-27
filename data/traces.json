@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": null,
+    "total_traces": 0,
+    "description": "Storage for AI agent decision traces and observability in MVP (v0.2.0)"
+  },
+  "traces": []
+}

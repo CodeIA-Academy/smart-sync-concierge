@@ -435,3 +435,60 @@ class ServiceStore(BaseStore):
                 return service
 
         return None
+
+
+class TraceStore(BaseStore):
+    """Store for AI agent decision traces."""
+
+    def __init__(self):
+        """Initialize TraceStore."""
+        super().__init__('traces.json')
+
+    def list_all(self) -> List[Dict[str, Any]]:
+        """Get all traces."""
+        data = self._read_data()
+        return data.get('traces', [])
+
+    def get_by_id(self, trace_id: str) -> Optional[Dict[str, Any]]:
+        """Get trace by ID."""
+        data = self._read_data()
+        traces = data.get('traces', [])
+
+        for trace in traces:
+            if trace.get('trace_id') == trace_id:
+                return trace
+
+        return None
+
+    def create(self, trace_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create new trace."""
+        data = self._read_data()
+        traces = data.get('traces', [])
+
+        # Ensure trace has required fields
+        if 'trace_id' not in trace_data:
+            trace_data['trace_id'] = self._generate_id('trace')
+
+        trace_data['created_at'] = datetime.utcnow().isoformat()
+
+        traces.append(trace_data)
+        data['traces'] = traces
+        data['metadata']['total_traces'] = len(traces)
+        data['metadata']['last_updated'] = datetime.utcnow().isoformat()
+
+        self._write_data(data)
+        return trace_data
+
+    def list_by_user(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get traces for specific user."""
+        data = self._read_data()
+        traces = data.get('traces', [])
+
+        return [t for t in traces if t.get('user_id') == user_id]
+
+    def list_by_status(self, status: str) -> List[Dict[str, Any]]:
+        """Get traces by final status (success, error, conflict)."""
+        data = self._read_data()
+        traces = data.get('traces', [])
+
+        return [t for t in traces if t.get('final_status') == status]

@@ -36,28 +36,61 @@ source venv/bin/activate  # Linux/Mac
 # o venv\Scripts\activate  # Windows
 
 # Instalar dependencias
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # Configurar variables de entorno
 cp .env.example .env
 # Editar .env con tus valores
 
-# Inicializar datos
-python manage.py init_data
+# Ejecutar verificación de Django
+python3 manage.py check
 
-# Ejecutar servidor
-python manage.py runserver
+# Ejecutar servidor de desarrollo
+python3 manage.py runserver
+
+# El servidor estará disponible en http://localhost:8000
 ```
+
+### Comandos Útiles
+
+```bash
+# Verificar configuración de Django
+python3 manage.py check
+
+# Ver todas las URLs disponibles
+python3 manage.py show_urls
+
+# Acceder a Django shell
+python3 manage.py shell
+
+# Correr tests
+pytest
+
+# Generar reporte de coverage
+pytest --cov=apps
+```
+
+### Documentación de la API
+
+Una vez ejecutado el servidor, accede a:
+
+- **API Root**: http://localhost:8000/api/v1/
+- **Especificación OpenAPI**: Ver `/docs/contracts/api/`
+- **Especificaciones por dominio**:
+  - Appointments: `/docs/contracts/api/appointments.yaml`
+  - Contacts: `/docs/contracts/api/contacts.yaml`
+  - Services: `/docs/contracts/api/services.yaml`
 
 ### Primer Uso
 
+Actualmente el servidor está en **Fase 1 (Configuración Base)**. Los endpoints aún no están completamente implementados. Verifica la salud del servidor:
+
 ```bash
-# Crear cita desde lenguaje natural
-curl -X POST http://localhost:8000/api/v1/appointments/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "cita mañana 10am con Dr. Pérez"
-  }'
+# Health check
+curl http://localhost:8000/api/v1/health/
+
+# API root con metadata
+curl http://localhost:8000/api/v1/
 ```
 
 **Respuesta:**

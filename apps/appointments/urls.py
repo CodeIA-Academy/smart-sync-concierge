@@ -9,11 +9,9 @@ from . import views
 
 app_name = 'appointments'
 
-# Router for ViewSets (will be added later)
-# router = DefaultRouter()
-# router.register(r'appointments', views.AppointmentViewSet)
+router = DefaultRouter()
+router.register(r'appointments', views.AppointmentViewSet, basename='appointment')
 
 urlpatterns = [
-    # Placeholder for future endpoints
-    # path('', include(router.urls)),
+    path('', include(router.urls)),
 ]

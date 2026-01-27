@@ -103,7 +103,7 @@ class DisponibilidadSerializer(serializers.Serializer):
 class ReminderConfigSerializer(serializers.Serializer):
     """Serializer for reminder configuration."""
 
-    minutos_antes = serializers.IntegerField(minimum=0)
+    minutos_antes = serializers.IntegerField(min_value=0)
     canales = serializers.ListField(
         child=serializers.ChoiceField(
             choices=['email', 'sms', 'whatsapp', 'push']

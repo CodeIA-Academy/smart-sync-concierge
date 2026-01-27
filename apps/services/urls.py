@@ -4,9 +4,14 @@ Endpoints for service catalog CRUD operations.
 """
 
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
 
 app_name = 'services'
 
+router = DefaultRouter()
+router.register(r'services', views.ServiceViewSet, basename='service')
+
 urlpatterns = [
-    # Placeholder for future endpoints
+    path('', include(router.urls)),
 ]

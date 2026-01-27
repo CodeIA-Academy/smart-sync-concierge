@@ -43,10 +43,7 @@ class LocationHorarioSerializer(serializers.Serializer):
 class LocationSerializer(serializers.Serializer):
     """Serializer for contact location."""
 
-    id = serializers.CharField(
-        max_length=100,
-        pattern=r'^loc_[a-z0-9_]+$'
-    )
+    id = serializers.CharField(max_length=100)
     nombre = serializers.CharField(max_length=200)
     direccion = serializers.CharField(max_length=500)
     coordenadas = CoordinatesSerializer(required=False)

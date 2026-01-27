@@ -44,7 +44,7 @@ Smart-Sync Concierge es una **API de citas agentica** donde un sistema de agente
 
 | Componente | Tecnología | Versión | Justificación |
 |------------|------------|---------|---------------|
-| Framework | Django | 6.0.1 | Ecosistema maduro, ORM flexible |
+| Framework | Django | 4.2.27 (LTS) | Ecosistema maduro, compatible Python 3.9+ |
 | API REST | Django REST Framework | 3.15.2 | Serialización, permisos, throttling |
 | Motor IA | **Pluggable** | - | Abstracción permite swap |
 | ├── Default | Qwen | 2.5 | Código abierto, coste competitivo |

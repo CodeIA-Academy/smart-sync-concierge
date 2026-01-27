@@ -17,6 +17,55 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [0.1.0] - 2026-01-27
+
+### ✨ Django Base Configuration - Setup Complete
+
+#### Infrastructure
+- ✅ **Django 4.2.27 (LTS)** configuration with modular settings (base, local, production)
+- ✅ **Django REST Framework 3.15.2** with full API configuration
+- ✅ **CORS & Security** configuration with HTTPS/HSTS for production
+- ✅ **Error Handling** with custom exception handlers and standardized responses
+- ✅ **Throttling** configured (60 req/min per user, 10k in development)
+- ✅ **Logging** with rotating file handlers and level-based filtering
+- ✅ **Static Files** and media handling configured
+
+#### Applications
+- ✅ **4 Django Apps** created with placeholder structure:
+  - `apps.appointments` - Appointment management
+  - `apps.contacts` - Doctor/staff/resource management
+  - `apps.services` - Service catalog
+  - `apps.availability` - Availability checks
+- ✅ Each app has `models.py`, `serializers.py`, `views.py`, `urls.py` ready for implementation
+
+#### Configuration Files
+- ✅ **config/constants.py** (300+ lines) - All enums and constants
+- ✅ **config/validators.py** (320+ lines) - Custom validation functions
+- ✅ **config/exceptions.py** (170+ lines) - Exception handling with conflict suggestions
+- ✅ **config/urls.py** - API root, health check, app routing
+- ✅ **config/views.py** - Custom 404/500 error handlers
+
+#### Project Structure
+- ✅ **manage.py** - Django CLI entry point
+- ✅ **requirements.txt** - Updated dependencies for Python 3.9+
+- ✅ **.gitignore** - Comprehensive git ignore rules
+- ✅ **pytest.ini** - Testing configuration with coverage settings
+- ✅ **data/** - JSON storage files (appointments, contacts, services)
+- ✅ **logs/**, **static/**, **media/**, **templates/** - Directories created
+
+#### Documentation
+- ✅ **DJANGO_SETUP.md** - Complete setup documentation
+- ✅ **architecture.md** - Updated with Django 4.2.27 version info
+
+#### Verification
+- ✅ `python manage.py check` - All systems verified and working
+- ✅ 40 Python files created with ~2,200 lines of code
+- ✅ Git commit: `c72d885 Set up Django base configuration (v0.1.0)`
+
+**Status: Ready for Phase 2 (Endpoint Implementation)**
+
+---
+
 ## [0.1.0] - 2026-01-22
 
 ### Añadido

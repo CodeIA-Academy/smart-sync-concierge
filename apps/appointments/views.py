@@ -105,6 +105,14 @@ class AppointmentViewSet(viewsets.ViewSet):
         """
         Create a new appointment from natural language prompt.
 
+        Uses AgentOrchestrator to process prompt through 6-agent pipeline:
+        1. ParsingAgent - Extract entities from prompt
+        2. TemporalReasoningAgent - Resolve relative dates/times
+        3. GeoReasoningAgent - Match location references
+        4. ValidationAgent - Validate data integrity
+        5. AvailabilityAgent - Check real-time availability
+        6. NegotiationAgent - Suggest alternatives if conflict
+
         Expected input:
         {
             "prompt": "cita mañana 10am con Dr. Pérez",
@@ -115,61 +123,90 @@ class AppointmentViewSet(viewsets.ViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        from data.stores import AppointmentStore, ContactStore, ServiceStore
+        from data.stores import AppointmentStore, ContactStore, ServiceStore, TraceStore
+        from apps.agents import AgentOrchestrator
 
-        # Parse the prompt (simplified for MVP)
-        # In production, this would use AI agents
-        apt_data = self._parse_appointment_prompt(
-            serializer.validated_data['prompt'],
-            serializer.validated_data.get('user_timezone', 'America/Mexico_City'),
+        # Initialize stores and orchestrator
+        appointment_store = AppointmentStore()
+        contact_store = ContactStore()
+        service_store = ServiceStore()
+        trace_store = TraceStore()
+        orchestrator = AgentOrchestrator()
+
+        # Prepare stores for agents
+        stores = {
+            'appointment_store': appointment_store,
+            'contact_store': contact_store,
+            'service_store': service_store,
+        }
+
+        # Process prompt through agent pipeline
+        result = orchestrator.process_appointment_prompt(
+            prompt=serializer.validated_data['prompt'],
+            user_timezone=serializer.validated_data.get('user_timezone', 'America/Mexico_City'),
+            user_id=serializer.validated_data.get('user_id', 'anonymous'),
+            stores=stores,
         )
 
-        # Validate contact exists
-        contact_store = ContactStore()
-        contact = contact_store.get_by_id(apt_data.get('contact_id'))
-        if not contact:
-            return Response({
+        # Save trace for observability
+        if 'trace' in result:
+            trace_store.create(result['trace'].to_dict())
+
+        # Handle orchestrator results
+        if result['status'] == 'error':
+            response_data = {
                 'status': 'error',
-                'code': 'NOT_FOUND',
-                'message': f"Contact {apt_data.get('contact_id')} not found"
-            }, status=status.HTTP_404_NOT_FOUND)
+                'code': result.get('error_code', 'PROCESSING_ERROR'),
+                'message': result['message'],
+                'trace_id': result.get('trace_id'),
+            }
 
-        # Validate service exists
-        service_store = ServiceStore()
-        service = service_store.get_by_id(apt_data.get('service_id'))
-        if not service:
-            return Response({
-                'status': 'error',
-                'code': 'NOT_FOUND',
-                'message': f"Service {apt_data.get('service_id')} not found"
-            }, status=status.HTTP_404_NOT_FOUND)
+            # Add ambiguities if prompt was ambiguous
+            if 'ambiguities' in result:
+                response_data['ambiguities'] = result['ambiguities']
 
-        # Check for conflicts
-        apt_store = AppointmentStore()
-        conflicts = apt_store.check_conflicts(apt_data)
+            # Add errors if validation failed
+            if 'errors' in result:
+                response_data['errors'] = result['errors']
 
-        if conflicts:
-            return Response({
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+        if result['status'] == 'conflict':
+            response_data = {
                 'status': 'error',
                 'code': 'CONFLICT',
-                'message': 'Requested time slot has conflicts',
-                'details': conflicts,
-                'suggestions': apt_store.get_suggestions(apt_data)
-            }, status=status.HTTP_409_CONFLICT)
+                'message': result['message'],
+                'error_detail': result.get('error_detail'),
+                'suggestions': result.get('suggestions', []),
+                'trace_id': result.get('trace_id'),
+            }
+            return Response(response_data, status=status.HTTP_409_CONFLICT)
 
-        # Create appointment
-        appointment = apt_store.create(apt_data)
+        # Success - create appointment
+        if result['status'] == 'success' and result['data']:
+            apt_data = result['data']
+
+            # Create appointment from processed data
+            appointment = appointment_store.create(apt_data)
+
+            return Response({
+                'status': 'success',
+                'data': AppointmentDetailSerializer(appointment).data,
+                'message': 'Appointment created successfully',
+                'trace_id': result.get('trace_id'),
+                '_links': {
+                    'self': f'/api/v1/appointments/{appointment["id"]}/',
+                    'reschedule': f'/api/v1/appointments/{appointment["id"]}/reschedule/',
+                    'contact': f'/api/v1/contacts/{apt_data["contacto_id"]}/',
+                    'trace': f'/api/v1/traces/{result.get("trace_id")}/',
+                }
+            }, status=status.HTTP_201_CREATED)
 
         return Response({
-            'status': 'success',
-            'data': AppointmentDetailSerializer(appointment).data,
-            'message': 'Appointment created successfully',
-            '_links': {
-                'self': f'/api/v1/appointments/{appointment["id"]}/',
-                'reschedule': f'/api/v1/appointments/{appointment["id"]}/reschedule/',
-                'contact': f'/api/v1/contacts/{apt_data["contact_id"]}/',
-            }
-        }, status=status.HTTP_201_CREATED)
+            'status': 'error',
+            'code': 'UNKNOWN_ERROR',
+            'message': 'Unexpected orchestrator result',
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def retrieve(self, request, pk=None):
         """Get appointment details by ID."""

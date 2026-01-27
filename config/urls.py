@@ -78,6 +78,7 @@ urlpatterns = [
     path('api/v1/', include('apps.contacts.urls')),
     path('api/v1/', include('apps.services.urls')),
     path('api/v1/', include('apps.availability.urls')),
+    path('api/v1/', include('apps.traces.urls')),
 ]
 
 # Serve static files during development

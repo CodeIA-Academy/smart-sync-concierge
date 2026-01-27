@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": null,
+    "total_services": 0,
+    "description": "Storage for service/appointment type catalog in MVP (v0.1.0)"
+  },
+  "services": []
+}

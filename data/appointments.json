@@ -1,0 +1,9 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": null,
+    "total_appointments": 0,
+    "description": "Storage for appointment data in MVP (v0.1.0)"
+  },
+  "appointments": []
+}

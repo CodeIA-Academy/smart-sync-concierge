@@ -1,0 +1,659 @@
+openapi: 3.0.3
+info:
+  title: Smart-Sync Concierge - Services API
+  description: |
+    API de servicios para el sistema Smart-Sync Concierge.
+
+    ## Características
+
+    - **Gestión de Servicios**: Alta, baja y modificación de servicios
+    - **Categorización**: Servicios por categoría (médica, odontología, laboratorio, imagen, terapia)
+    - **Configuración Flexible**: Duración, precio, políticas, requerimientos
+    - **Recordatorios**: Configuración automática de recordatorios por servicio
+
+    ## Casos de Uso
+
+    1. **Administración**: Gestión completa de tipos de cita disponibles
+    2. **Validación**: Verificar disponibilidad y requerimientos de servicios
+    3. **Catalogo**: Exponer servicios disponibles a usuarios
+  version: 0.1.0
+  contact:
+    name: Smart-Sync Concierge Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo local
+  - url: https://api.smartsync.example.com/api/v1
+    description: Producción
+
+tags:
+  - name: services
+    description: Operaciones de servicios
+
+paths:
+  /services/:
+    get:
+      tags: [services]
+      summary: Listar servicios
+      description: |
+        Obtiene lista de servicios con filtros opcionales.
+
+        Soporta:
+        - Filtrado por categoría
+        - Filtrado por estado (activo/inactivo)
+        - Búsqueda por nombre
+        - Paginación
+      operationId: listServices
+      parameters:
+        - name: categoria
+          in: query
+          description: Filtrar por categoría de servicio
+          required: false
+          schema:
+            type: string
+            enum: [medica, odontologia, laboratorio, imagen, terapia, otra]
+        - name: search
+          in: query
+          description: Búsqueda por nombre o descripción
+          required: false
+          schema:
+            type: string
+        - name: activo
+          in: query
+          description: Filtrar solo servicios activos
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de servicios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ServiceSummary'
+        '401':
+          description: No autenticado
+
+    post:
+      tags: [services]
+      summary: Crear servicio
+      description: |
+        Crea un nuevo servicio en el sistema.
+
+        El servicio puede ser de diferentes categorías:
+        - **Médica**: Consultas, procedimientos
+        - **Odontología**: Limpiezas, tratamientos
+        - **Laboratorio**: Análisis de sangre, etc.
+        - **Imagen**: Radiografías, ecografías
+        - **Terapia**: Fisioterapia, psicología
+        - **Otra**: Otros servicios
+      operationId: createService
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+            examples:
+              consulta_general:
+                summary: Crear servicio de consulta general
+                value:
+                  nombre: "Consulta General"
+                  descripcion: "Consulta médica general con diagnóstico"
+                  categoria: "medica"
+                  duracion_minutos: 60
+                  duracion_minima_minutos: 30
+                  duracion_maxima_minutos: 90
+                  activo: true
+                  requerimientos:
+                    contacto_tipo: "doctor"
+                    ubicacion_tipo: "consultorio"
+                  precio:
+                    monto: 500
+                    moneda: "MXN"
+                    incluye: ["consulta", "diagnostico", "receta"]
+                  politicas:
+                    cancelacion_anticipacion_horas: 24
+                    permite_urgencia: true
+                  recordatorios_config:
+                    activo: true
+                    recordatorios:
+                      - minutos_antes: 1440
+                        canales: ["whatsapp", "email"]
+              laboratorio:
+                summary: Crear servicio de laboratorio
+                value:
+                  nombre: "Análisis de Sangre"
+                  descripcion: "Análisis completo de sangre"
+                  categoria: "laboratorio"
+                  duracion_minutos: 15
+                  activo: true
+                  requerimientos:
+                    contacto_tipo: "staff"
+                    ubicacion_tipo: "laboratorio"
+                    preparacion_previa: true
+                    instrucciones_preparacion: "Ayuno de 8 horas"
+      responses:
+        '201':
+          description: Servicio creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceDetail'
+        '400':
+          description: Request inválido
+        '409':
+          description: Servicio duplicado
+
+  /services/{service_id}/:
+    get:
+      tags: [services]
+      summary: Obtener detalle de servicio
+      description: Obtiene detalles completos de un servicio
+      operationId: getService
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^service_[a-z0-9_]+$'
+      responses:
+        '200':
+          description: Detalle del servicio
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceDetail'
+        '404':
+          description: Servicio no encontrado
+
+    put:
+      tags: [services]
+      summary: Actualizar servicio
+      description: |
+        Actualiza información de un servicio.
+
+        Soporta actualización parcial (PATCH).
+      operationId: updateService
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateServiceRequest'
+      responses:
+        '200':
+          description: Servicio actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceDetail'
+        '404':
+          description: Servicio no encontrado
+
+    delete:
+      tags: [services]
+      summary: Desactivar servicio
+      description: |
+        Desactiva un servicio (soft delete).
+
+        El servicio no se elimina físicamente:
+        - Se marca como `activo: false`
+        - No aparece en búsquedas por defecto
+        - Los servicios existentes se mantienen
+      operationId: deleteService
+      parameters:
+        - name: service_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Servicio desactivado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "deactivated"
+                  message:
+                    type: string
+        '404':
+          description: Servicio no encontrado
+
+components:
+  schemas:
+    CreateServiceRequest:
+      type: object
+      required: [nombre, categoria, duracion_minutos]
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Nombre del servicio
+          example: "Consulta General"
+        descripcion:
+          type: string
+          maxLength: 500
+          description: Descripción detallada
+          example: "Consulta médica general con diagnóstico y tratamiento"
+        categoria:
+          type: string
+          enum: [medica, odontologia, laboratorio, imagen, terapia, otra]
+          description: Categoría del servicio
+        subcategoria:
+          type: string
+          description: Subcategoría específica
+          example: "cardiologia"
+        duracion_minutos:
+          type: integer
+          minimum: 15
+          maximum: 480
+          description: Duración default en minutos
+          example: 60
+        duracion_minima_minutos:
+          type: integer
+          minimum: 15
+          description: Duración mínima permitida
+          example: 30
+        duracion_maxima_minutos:
+          type: integer
+          maximum: 480
+          description: Duración máxima permitida
+          example: 90
+        permite_sobrecupo:
+          type: boolean
+          description: Si permite múltiples citas simultáneas
+          default: false
+        maximo_simultaneo:
+          type: integer
+          minimum: 1
+          description: Máximo de citas simultáneas (si permite_sobrecupo)
+          example: 3
+        activo:
+          type: boolean
+          description: Si el servicio está activo
+          default: true
+        requerimientos:
+          type: object
+          description: Requerimientos específicos
+          properties:
+            contacto_tipo:
+              type: string
+              enum: [doctor, staff, resource, cualquiera]
+              example: "doctor"
+            contacto_especialidad:
+              type: string
+              description: Especialidad requerida
+              example: "Cardiología"
+            ubicacion_tipo:
+              type: string
+              enum: [consultorio, sala, laboratorio, cualquiera]
+              example: "consultorio"
+            equipos:
+              type: array
+              items:
+                type: string
+              description: Equipos necesarios
+              example: ["estetoscopio", "tensiómetro"]
+            preparacion_previa:
+              type: boolean
+              description: Si requiere preparación previa
+            instrucciones_preparacion:
+              type: string
+              description: Instrucciones de preparación
+              example: "Ayuno de 8 horas"
+        precio:
+          type: object
+          description: Información de precio
+          properties:
+            monto:
+              type: number
+              minimum: 0
+              description: Monto del precio
+              example: 500
+            moneda:
+              type: string
+              pattern: "^[A-Z]{3}$"
+              default: "MXN"
+              description: Código de moneda (ISO 4217)
+            incluye:
+              type: array
+              items:
+                type: string
+              description: Qué está incluido
+              example: ["consulta", "diagnostico", "receta"]
+            variables:
+              type: boolean
+              description: Si el precio varía
+            factores_variacion:
+              type: array
+              items:
+                type: string
+              description: Factores que afectan el precio
+        politicas:
+          type: object
+          description: Políticas del servicio
+          properties:
+            cancelacion_anticipacion_horas:
+              type: integer
+              minimum: 0
+              default: 24
+              description: Horas de anticipación para cancelación
+            reprogramacion_anticipacion_horas:
+              type: integer
+              minimum: 0
+              default: 24
+              description: Horas de anticipación para reprogramación
+            penalidad_cancelacion:
+              type: object
+              properties:
+                tipo:
+                  type: string
+                  enum: [porcentaje, fijo, ninguna]
+                monto:
+                  type: number
+                  minimum: 0
+                porcentaje:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+            permite_urgencia:
+              type: boolean
+              description: Si permite agendar como urgente
+            anticipacion_urgencia_minutos:
+              type: integer
+              minimum: 0
+              description: Anticipación mínima para urgencia
+        disponibilidad:
+          type: object
+          description: Configuración de disponibilidad
+          properties:
+            dias_anticipacion_maxima:
+              type: integer
+              minimum: 1
+              default: 90
+              description: Días máximos de anticipación
+            minimo_anticipacion_horas:
+              type: integer
+              minimum: 0
+              default: 1
+              description: Horas mínimas de anticipación
+            dias_no_permitidos:
+              type: array
+              items:
+                type: integer
+                minimum: 1
+                maximum: 7
+              description: Días no permitidos (1=lun, 7=dom)
+              example: [6, 7]
+        recordatorios_config:
+          type: object
+          description: Configuración de recordatorios
+          properties:
+            activo:
+              type: boolean
+              default: true
+            recordatorios:
+              type: array
+              items:
+                type: object
+                properties:
+                  minutos_antes:
+                    type: integer
+                    minimum: 0
+                    example: 1440
+                  canales:
+                    type: array
+                    items:
+                      type: string
+                      enum: [email, sms, whatsapp, push]
+                    example: ["whatsapp", "email"]
+        metadatos:
+          type: object
+          description: Metadatos adicionales
+          properties:
+            codigo_cie:
+              type: string
+              description: Código CIE-11 (si aplica)
+            requiere_autorizacion:
+              type: boolean
+              description: Si requiere autorización previa
+            frecuencia_recomendada:
+              type: string
+              example: "mensual"
+
+    UpdateServiceRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 2
+          maxLength: 100
+        descripcion:
+          type: string
+          maxLength: 500
+        categoria:
+          type: string
+          enum: [medica, odontologia, laboratorio, imagen, terapia, otra]
+        duracion_minutos:
+          type: integer
+          minimum: 15
+          maximum: 480
+        duracion_minima_minutos:
+          type: integer
+          minimum: 15
+        duracion_maxima_minutos:
+          type: integer
+          maximum: 480
+        permite_sobrecupo:
+          type: boolean
+        maximo_simultaneo:
+          type: integer
+          minimum: 1
+        activo:
+          type: boolean
+        requerimientos:
+          type: object
+        precio:
+          type: object
+        politicas:
+          type: object
+        disponibilidad:
+          type: object
+        recordatorios_config:
+          type: object
+        metadatos:
+          type: object
+
+    ServiceSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          pattern: '^service_[a-z0-9_]+$'
+          example: "service_consulta_general"
+        nombre:
+          type: string
+          example: "Consulta General"
+        categoria:
+          type: string
+          enum: [medica, odontologia, laboratorio, imagen, terapia, otra]
+        duracion_minutos:
+          type: integer
+          example: 60
+        activo:
+          type: boolean
+        precio_monto:
+          type: number
+          nullable: true
+          example: 500
+        precio_moneda:
+          type: string
+          nullable: true
+          example: "MXN"
+
+    ServiceDetail:
+      allOf:
+        - $ref: '#/components/schemas/ServiceSummary'
+        - type: object
+          properties:
+            descripcion:
+              type: string
+            subcategoria:
+              type: string
+              nullable: true
+            duracion_minima_minutos:
+              type: integer
+            duracion_maxima_minutos:
+              type: integer
+            permite_sobrecupo:
+              type: boolean
+            maximo_simultaneo:
+              type: integer
+              nullable: true
+            requerimientos:
+              type: object
+              properties:
+                contacto_tipo:
+                  type: string
+                contacto_especialidad:
+                  type: string
+                  nullable: true
+                ubicacion_tipo:
+                  type: string
+                equipos:
+                  type: array
+                  items:
+                    type: string
+                preparacion_previa:
+                  type: boolean
+                instrucciones_preparacion:
+                  type: string
+                  nullable: true
+            precio:
+              type: object
+              properties:
+                monto:
+                  type: number
+                moneda:
+                  type: string
+                incluye:
+                  type: array
+                  items:
+                    type: string
+                variables:
+                  type: boolean
+                factores_variacion:
+                  type: array
+                  items:
+                    type: string
+            politicas:
+              type: object
+              properties:
+                cancelacion_anticipacion_horas:
+                  type: integer
+                reprogramacion_anticipacion_horas:
+                  type: integer
+                penalidad_cancelacion:
+                  type: object
+                permite_urgencia:
+                  type: boolean
+                anticipacion_urgencia_minutos:
+                  type: integer
+                  nullable: true
+            disponibilidad:
+              type: object
+              properties:
+                dias_anticipacion_maxima:
+                  type: integer
+                minimo_anticipacion_horas:
+                  type: integer
+                horas_permitidas:
+                  type: array
+                  items:
+                    type: object
+                dias_no_permitidos:
+                  type: array
+                  items:
+                    type: integer
+            recordatorios_config:
+              type: object
+              properties:
+                activo:
+                  type: boolean
+                recordatorios:
+                  type: array
+                  items:
+                    type: object
+            metadatos:
+              type: object
+            estadisticas:
+              type: object
+              properties:
+                total_citas:
+                  type: integer
+                citas_completadas:
+                  type: integer
+                citas_canceladas:
+                  type: integer
+                tasa_completitud:
+                  type: number
+                duracion_promedio_minutos:
+                  type: number
+                ultima_cita:
+                  type: string
+                  format: date-time
+                  nullable: true
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

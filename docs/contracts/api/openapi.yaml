@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: Smart-Sync Concierge API
+  version: 0.1.0
+  description: |
+    # Smart-Sync Concierge v0.1.0
+
+    API de citas agentica (multi-agente) que utiliza IA para transformar lenguaje natural en acciones estructuradas para la gestión del ciclo de vida completo de citas.
+
+    ## Características Principales
+
+    - **Prompt-First**: Crear citas desde lenguaje natural ("cita mañana 10am con Dr. Pérez")
+    - **IA-Powered**: Extracción inteligente con Qwen 2.5
+    - **Arquitectura Multi-Agente**: 6 agentes especializados trabajando en pipeline
+    - **Validación Geo-Temporal**: Soporte multi-zona horaria con reglas de negocio
+    - **Observabilidad Nativa**: Trazabilidad completa con DecisionTrace
+    - **Negociación Inteligente**: Sugerencias automáticas cuando hay conflictos
+
+    ## Documentación Detallada
+
+    Ver cada sección de API para más detalles:
+    - [Appointments API](#tag/appointments) - Crear y gestionar citas
+    - [Contacts API](#tag/contacts) - Gestión de doctores, staff y recursos
+    - [Services API](#tag/services) - Catálogo de servicios disponibles
+    - [Availability API](#tag/availability) - Consultar disponibilidad
+    - [Agents API](#tag/agents) - API interna para testing y debugging
+    - [Traces API](#tag/traces) - Trazabilidad de decisiones de agentes
+
+  contact:
+    name: Smart-Sync Concierge Team
+    email: api@smartsync.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo local
+  - url: https://staging-api.smartsync.example.com/api/v1
+    description: Staging
+  - url: https://api.smartsync.example.com/api/v1
+    description: Producción
+
+tags:
+  - name: appointments
+    description: Operaciones de citas
+    externalDocs:
+      url: ./appointments.yaml
+  - name: contacts
+    description: Operaciones de contactos
+    externalDocs:
+      url: ./contacts.yaml
+  - name: services
+    description: Operaciones de servicios
+    externalDocs:
+      url: ./services.yaml
+  - name: availability
+    description: Consulta de disponibilidad
+    externalDocs:
+      url: ./appointments.yaml
+  - name: agents
+    description: API interna de agentes (testing/debugging)
+    externalDocs:
+      url: ./agents.yaml
+  - name: traces
+    description: Trazabilidad de decisiones
+    externalDocs:
+      url: ./agents.yaml
+
+paths:
+  # Appointments
+  /appointments/:
+    $ref: './appointments.yaml#/paths/~1appointments~1'
+  /appointments/{appointment_id}/:
+    $ref: './appointments.yaml#/paths/~1appointments~1{appointment_id}~1'
+  /appointments/{appointment_id}/reschedule/:
+    $ref: './appointments.yaml#/paths/~1appointments~1{appointment_id}~1reschedule~1'
+
+  # Availability
+  /availability/:
+    $ref: './appointments.yaml#/paths/~1availability~1'
+  /availability/slots/:
+    $ref: './appointments.yaml#/paths/~1availability~1slots~1'
+
+  # Contacts
+  /contacts/:
+    $ref: './contacts.yaml#/paths/~1contacts~1'
+  /contacts/{contact_id}/:
+    $ref: './contacts.yaml#/paths/~1contacts~1{contact_id}~1'
+  /contacts/{contact_id}/availability/:
+    $ref: './contacts.yaml#/paths/~1contacts~1{contact_id}~1availability~1'
+  /contacts/{contact_id}/appointments/:
+    $ref: './contacts.yaml#/paths/~1contacts~1{contact_id}~1appointments~1'
+
+  # Services
+  /services/:
+    $ref: './services.yaml#/paths/~1services~1'
+  /services/{service_id}/:
+    $ref: './services.yaml#/paths/~1services~1{service_id}~1'
+
+  # Agents (Internal)
+  /internal/agents/:
+    $ref: './agents.yaml#/paths/~1agents~1'
+  /internal/agents/{agent_name}/execute:
+    $ref: './agents.yaml#/paths/~1agents~1{agent_name}~1execute'
+  /internal/agents/{agent_name}/config:
+    $ref: './agents.yaml#/paths/~1agents~1{agent_name}~1config'
+  /internal/agents/pipeline/execute:
+    $ref: './agents.yaml#/paths/~1agents~1pipeline~1execute'
+
+  # Traces
+  /internal/traces/:
+    $ref: './agents.yaml#/paths/~1traces~1'
+  /internal/traces/{trace_id}/:
+    $ref: './agents.yaml#/paths/~1traces~1{trace_id}~1'
+
+  # Metrics
+  /internal/metrics/agents:
+    $ref: './agents.yaml#/paths/~1metrics~1agents'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Autenticación JWT para endpoints protegidos.
+
+        Incluya el token en el header Authorization:
+        ```
+        Authorization: Bearer <token>
+        ```
+
+security:
+  - BearerAuth: []
+
+x-logo:
+  url: https://example.com/logo.png
+  altText: Smart-Sync Concierge Logo

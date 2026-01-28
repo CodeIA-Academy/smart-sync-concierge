@@ -1,10 +1,132 @@
 {
   "info": {
+    "_postman_id": "smart-sync-concierge-v0.2.0",
     "name": "Smart-Sync Concierge API v0.2.0",
-    "description": "Testing collection for Phase 3 integration",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "description": "Complete testing collection for Phase 3 AI Agent Integration\n\nInstructions:\n1. Import this collection into Postman\n2. Set the 'base_url' variable to http://localhost:9000\n3. Start with 'Health Check' to verify server is running\n4. Use 'Create Appointment' to trigger the AI pipeline\n5. View the trace_id in the response\n6. Use 'Get Specific Trace' to see all agent decisions\n\nFeatures:\n- 20+ pre-configured requests\n- Environment variables for easy configuration\n- Test scripts for validation\n- Pre-request scripts for automation\n- Response examples for reference",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "variable": [
+      {
+        "key": "base_url",
+        "value": "http://localhost:9000",
+        "description": "Base URL for API (change port if needed)"
+      },
+      {
+        "key": "api_path",
+        "value": "/api/v1",
+        "description": "API version path"
+      },
+      {
+        "key": "trace_id",
+        "value": "",
+        "description": "Trace ID from last appointment creation (auto-set by scripts)"
+      },
+      {
+        "key": "appointment_id",
+        "value": "",
+        "description": "Appointment ID from last creation (auto-set by scripts)"
+      },
+      {
+        "key": "contact_id",
+        "value": "contact_07255ac6",
+        "description": "Test contact ID (update after creating new contact)"
+      }
+    ]
   },
   "item": [
+    {
+      "name": "Quick Start - Run These First",
+      "description": "Start here to verify everything works",
+      "item": [
+        {
+          "name": "1. Health Check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_path}}/health/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health", ""]
+            },
+            "description": "Verify API is running. Should return status: 'healthy'"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "url": "http://localhost:9000/api/v1/health/"
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"healthy\",\n  \"message\": \"Smart-Sync Concierge API is running\",\n  \"version\": \"0.1.0\",\n  \"timestamp\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "2. Create Appointment (Simple)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Save trace_id for next requests",
+                  "if (pm.response.code === 201 || pm.response.code === 400 || pm.response.code === 409) {",
+                  "  var jsonData = pm.response.json();",
+                  "  pm.environment.set('trace_id', jsonData.trace_id);",
+                  "  pm.environment.set('appointment_id', jsonData.data?.id || 'N/A');",
+                  "  console.log('Trace ID saved:', jsonData.trace_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"cita mañana 10am con Dr. García\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"test_user_001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}{{api_path}}/appointments/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
+            },
+            "description": "Create appointment with natural language prompt. Returns trace_id automatically saved to {{trace_id}}"
+          },
+          "response": []
+        },
+        {
+          "name": "3. View Trace Details (Use trace_id from above)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", ""]
+            },
+            "description": "Get full trace details with all agent decisions. trace_id auto-filled from previous request."
+          },
+          "response": []
+        }
+      ]
+    },
     {
       "name": "Health & Status",
       "item": [
@@ -12,54 +134,58 @@
           "name": "Health Check",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/health/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "health",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/health/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health", ""]
             },
             "description": "Check if API is running"
-          },
-          "response": []
+          }
         },
         {
           "name": "API Root",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", ""]
             },
             "description": "Get API root with available endpoints"
-          },
-          "response": []
+          }
         }
       ]
     },
     {
       "name": "Appointments - AI Pipeline",
+      "description": "Create appointments using natural language. AI processes through 6-agent pipeline.",
       "item": [
         {
-          "name": "Create Appointment (Success)",
+          "name": "Create - Success Case",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('trace_id', jsonData.trace_id);",
+                  "console.log('✓ Trace ID:', jsonData.trace_id);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -73,25 +199,27 @@
               "raw": "{\n  \"prompt\": \"cita mañana 9am con Dr. García\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"user_001\"\n}"
             },
             "url": {
-              "raw": "http://localhost:9000/api/v1/appointments/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/appointments/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
             },
-            "description": "Create appointment with natural language prompt. Returns trace_id for observability."
-          },
-          "response": []
+            "description": "Create appointment that should succeed. Returns 201 Created with appointment data."
+          }
         },
         {
-          "name": "Create Appointment (Conflict)",
+          "name": "Create - Conflict Case",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set('trace_id', jsonData.trace_id);",
+                  "console.log('✓ Conflict detected. Suggestions:', jsonData.suggestions?.length);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -105,25 +233,15 @@
               "raw": "{\n  \"prompt\": \"cita mañana 10am con Dr. García\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"user_002\"\n}"
             },
             "url": {
-              "raw": "http://localhost:9000/api/v1/appointments/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/appointments/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
             },
-            "description": "Create appointment that will conflict. Returns 409 with suggestions from NegotiationAgent."
-          },
-          "response": []
+            "description": "Create appointment with time conflict. Returns 409 Conflict with alternative suggestions from NegotiationAgent."
+          }
         },
         {
-          "name": "Create Appointment (Ambiguous)",
+          "name": "Create - Ambiguous Case",
           "request": {
             "method": "POST",
             "header": [
@@ -137,208 +255,208 @@
               "raw": "{\n  \"prompt\": \"necesito una cita\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"user_003\"\n}"
             },
             "url": {
-              "raw": "http://localhost:9000/api/v1/appointments/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/appointments/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
             },
-            "description": "Create appointment with ambiguous prompt. ParsingAgent will detect missing fields and return 400."
-          },
-          "response": []
+            "description": "Create appointment with ambiguous prompt (missing date/time). ParsingAgent detects issue. Returns 400 Bad Request."
+          }
         },
         {
           "name": "List Appointments",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/appointments/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/appointments/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
             },
             "description": "List all appointments"
-          },
-          "response": []
+          }
         }
       ]
     },
     {
       "name": "Traces - Observability",
+      "description": "View DecisionTraces and agent decisions. Auto-set trace_id from 'Create Appointment' requests.",
       "item": [
         {
           "name": "List All Traces",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/traces/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/traces/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", ""]
             },
             "description": "List all DecisionTraces with pagination (50 items/page)"
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Specific Trace",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/traces/{{trace_id}}/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "{{trace_id}}",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", ""]
             },
-            "description": "Get details of a specific trace. Replace {{trace_id}} with actual trace ID from create response."
-          },
-          "response": []
+            "description": "Get details of specific trace (auto-filled {{trace_id}})"
+          }
         },
         {
-          "name": "Filter Traces by Status",
+          "name": "Filter by Status (success)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/traces/by_status/?status=success",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "by_status",
-                ""
-              ],
+              "raw": "{{base_url}}{{api_path}}/traces/by_status/?status=success",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_status", ""],
               "query": [
                 {
                   "key": "status",
                   "value": "success",
-                  "description": "Filter by status: success, error, or conflict"
+                  "disabled": false
                 }
               ]
             },
-            "description": "Filter traces by final_status (success, error, conflict)"
-          },
-          "response": []
+            "description": "Filter traces by status. Try: success, error, conflict"
+          }
         },
         {
-          "name": "Filter Traces by User",
+          "name": "Filter by Status (error)",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/traces/by_user/?user_id=user_001",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "by_user",
-                ""
-              ],
+              "raw": "{{base_url}}{{api_path}}/traces/by_status/?status=error",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_status", ""],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "error",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Filter traces by status (error)"
+          }
+        },
+        {
+          "name": "Filter by Status (conflict)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_path}}/traces/by_status/?status=conflict",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_status", ""],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "conflict",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Filter traces by status (conflict)"
+          }
+        },
+        {
+          "name": "Filter by User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}{{api_path}}/traces/by_user/?user_id=user_001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_user", ""],
               "query": [
                 {
                   "key": "user_id",
-                  "value": "user_001"
+                  "value": "user_001",
+                  "disabled": false
                 }
               ]
             },
-            "description": "Filter traces by user_id"
-          },
-          "response": []
+            "description": "Filter traces by user_id (change query param)"
+          }
         },
         {
           "name": "Get Agent Decisions",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/traces/{{trace_id}}/agents/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "{{trace_id}}",
-                "agents",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/agents/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", "agents", ""]
             },
-            "description": "Get decisions from each of the 6 agents in the pipeline"
-          },
-          "response": []
+            "description": "Get decisions from each of the 6 agents (auto-filled {{trace_id}})"
+          }
         },
         {
           "name": "Get Performance Metrics",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/traces/{{trace_id}}/metrics/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "{{trace_id}}",
-                "metrics",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/metrics/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", "metrics", ""]
             },
-            "description": "Get performance metrics for a trace (agent durations, overhead, etc)"
-          },
-          "response": []
+            "description": "Get performance metrics for trace (auto-filled {{trace_id}})"
+          }
         }
       ]
     },
@@ -349,24 +467,19 @@
           "name": "List Contacts",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/contacts/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "contacts",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/contacts/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contacts", ""]
             },
-            "description": "List all contacts (doctors, staff, resources)"
-          },
-          "response": []
+            "description": "List all contacts (doctors, staff)"
+          }
         },
         {
           "name": "Create Contact",
@@ -380,25 +493,15 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Dr. Carlos Rodríguez\",\n  \"especialidad\": \"Oftalmología\",\n  \"email\": \"carlos@clinic.com\",\n  \"telefono\": \"5554444444\"\n}"
+              "raw": "{\n  \"nombre\": \"Dr. New Doctor\",\n  \"especialidad\": \"Medicina General\",\n  \"email\": \"doctor@clinic.com\",\n  \"telefono\": \"5551234567\"\n}"
             },
             "url": {
-              "raw": "http://localhost:9000/api/v1/contacts/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "contacts",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/contacts/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contacts", ""]
             },
-            "description": "Create a new contact"
-          },
-          "response": []
+            "description": "Create new contact"
+          }
         }
       ]
     },
@@ -409,33 +512,21 @@
           "name": "List Services",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "url": {
-              "raw": "http://localhost:9000/api/v1/services/",
-              "protocol": "http",
-              "host": [
-                "localhost"
-              ],
-              "port": "9000",
-              "path": [
-                "api",
-                "v1",
-                "services",
-                ""
-              ]
+              "raw": "{{base_url}}{{api_path}}/services/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "services", ""]
             },
-            "description": "List all available services"
-          },
-          "response": []
+            "description": "List all services"
+          }
         }
       ]
-    }
-  ],
-  "variable": [
-    {
-      "key": "trace_id",
-      "value": "trace_20260128_015941_140730d9",
-      "type": "string"
     }
   ]
 }

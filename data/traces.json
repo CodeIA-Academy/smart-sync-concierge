@@ -1,9 +1,384 @@
 {
   "metadata": {
     "version": "1.0.0",
-    "last_updated": null,
-    "total_traces": 0,
+    "last_updated": "2026-01-28T08:00:03.093259",
+    "total_traces": 4,
     "description": "Storage for AI agent decision traces and observability in MVP (v0.2.0)"
   },
-  "traces": []
+  "traces": [
+    {
+      "trace_id": "trace_20260128_015941_140730d9",
+      "timestamp": "2026-01-28T01:59:41.794031",
+      "input_prompt": "cita mañana 10am con Dr. García",
+      "user_timezone": "America/Mexico_City",
+      "user_id": "test_user_001",
+      "agents": [
+        {
+          "agent": "parsing",
+          "status": "warning",
+          "message": "Extracted entities but found 1 ambiguities",
+          "input": {},
+          "output": {
+            "contacto_nombre": "García",
+            "fecha_raw": "mañana",
+            "hora_raw": "10:00",
+            "ubicacion": null,
+            "servicio": null,
+            "ambiguities": [
+              {
+                "field": "ubicacion",
+                "message": "No se especificó en qué ubicación",
+                "severity": "info"
+              }
+            ],
+            "raw_prompt": "cita mañana 10am con Dr. García"
+          },
+          "duration_ms": 0,
+          "confidence": 1.0,
+          "errors": [],
+          "warnings": [
+            "ubicacion: No se especificó en qué ubicación"
+          ]
+        },
+        {
+          "agent": "temporal_reasoning",
+          "status": "success",
+          "message": "Successfully resolved temporal references",
+          "input": {},
+          "output": {
+            "fecha": "2026-01-29",
+            "hora_inicio": "10:00",
+            "hora_fin": "11:00",
+            "timezone": "America/Mexico_City",
+            "resolved_datetime": "2026-01-29T10:00:00"
+          },
+          "duration_ms": 16,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "geo_reasoning",
+          "status": "error",
+          "message": "No locations available for this contact",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "validation",
+          "status": "success",
+          "message": "All validations passed",
+          "input": {},
+          "output": {
+            "fecha": "2026-01-29",
+            "hora_inicio": "10:00",
+            "hora_fin": "11:00",
+            "contacto_id": "contact_07255ac6",
+            "contacto_nombre": "García"
+          },
+          "duration_ms": 0,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "availability",
+          "status": "error",
+          "message": "Contact not available: Contacto inactivo",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [
+            "Reason: Contacto inactivo"
+          ],
+          "warnings": []
+        },
+        {
+          "agent": "negotiation",
+          "status": "warning",
+          "message": "No alternative slots found",
+          "input": {},
+          "output": {
+            "has_alternatives": false,
+            "suggestions": [],
+            "total_suggestions_evaluated": 0
+          },
+          "duration_ms": 0,
+          "confidence": 0.3,
+          "errors": [],
+          "warnings": [
+            "Could not find alternative appointment times"
+          ]
+        }
+      ],
+      "final_status": "conflict",
+      "final_output": {},
+      "total_duration_ms": 17,
+      "created_at": "2026-01-28T07:59:41.811797"
+    },
+    {
+      "trace_id": "trace_20260128_015951_54f10bd6",
+      "timestamp": "2026-01-28T01:59:51.964787",
+      "input_prompt": "necesito una cita con Dr. García",
+      "user_timezone": "America/Mexico_City",
+      "user_id": "test_user",
+      "agents": [
+        {
+          "agent": "parsing",
+          "status": "warning",
+          "message": "Extracted entities but found 3 ambiguities",
+          "input": {},
+          "output": {
+            "contacto_nombre": "García",
+            "fecha_raw": null,
+            "hora_raw": null,
+            "ubicacion": null,
+            "servicio": null,
+            "ambiguities": [
+              {
+                "field": "fecha",
+                "message": "No se especificó cuándo",
+                "severity": "error"
+              },
+              {
+                "field": "hora",
+                "message": "No se especificó a qué hora",
+                "severity": "warning"
+              },
+              {
+                "field": "ubicacion",
+                "message": "No se especificó en qué ubicación",
+                "severity": "info"
+              }
+            ],
+            "raw_prompt": "necesito una cita con Dr. García"
+          },
+          "duration_ms": 0,
+          "confidence": 0.5,
+          "errors": [],
+          "warnings": [
+            "fecha: No se especificó cuándo",
+            "hora: No se especificó a qué hora",
+            "ubicacion: No se especificó en qué ubicación"
+          ]
+        },
+        {
+          "agent": "temporal_reasoning",
+          "status": "error",
+          "message": "Missing fecha_raw or hora_raw",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [],
+          "warnings": []
+        }
+      ],
+      "final_status": "error",
+      "final_output": {},
+      "total_duration_ms": 1,
+      "created_at": "2026-01-28T07:59:51.966000"
+    },
+    {
+      "trace_id": "trace_20260128_020003_fc00181f",
+      "timestamp": "2026-01-28T02:00:03.039779",
+      "input_prompt": "cita mañana 9am con Dr. García",
+      "user_timezone": "America/Mexico_City",
+      "user_id": "test_user",
+      "agents": [
+        {
+          "agent": "parsing",
+          "status": "warning",
+          "message": "Extracted entities but found 1 ambiguities",
+          "input": {},
+          "output": {
+            "contacto_nombre": "García",
+            "fecha_raw": "mañana",
+            "hora_raw": "9:00",
+            "ubicacion": null,
+            "servicio": null,
+            "ambiguities": [
+              {
+                "field": "ubicacion",
+                "message": "No se especificó en qué ubicación",
+                "severity": "info"
+              }
+            ],
+            "raw_prompt": "cita mañana 9am con Dr. García"
+          },
+          "duration_ms": 0,
+          "confidence": 1.0,
+          "errors": [],
+          "warnings": [
+            "ubicacion: No se especificó en qué ubicación"
+          ]
+        },
+        {
+          "agent": "temporal_reasoning",
+          "status": "success",
+          "message": "Successfully resolved temporal references",
+          "input": {},
+          "output": {
+            "fecha": "2026-01-29",
+            "hora_inicio": "9:00",
+            "hora_fin": "10:00",
+            "timezone": "America/Mexico_City",
+            "resolved_datetime": "2026-01-29T9:00:00"
+          },
+          "duration_ms": 16,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "geo_reasoning",
+          "status": "error",
+          "message": "No locations available for this contact",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "validation",
+          "status": "error",
+          "message": "Validation failed with 1 error(s)",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [
+            "Invalid time format: 9:00 (expected HH:MM)"
+          ],
+          "warnings": []
+        }
+      ],
+      "final_status": "error",
+      "final_output": {},
+      "total_duration_ms": 17,
+      "created_at": "2026-01-28T08:00:03.057191"
+    },
+    {
+      "trace_id": "trace_20260128_020003_595478bc",
+      "timestamp": "2026-01-28T02:00:03.057987",
+      "input_prompt": "cita pasado mañana 14:00 con Dr. García",
+      "user_timezone": "America/Mexico_City",
+      "user_id": "test_user",
+      "agents": [
+        {
+          "agent": "parsing",
+          "status": "warning",
+          "message": "Extracted entities but found 1 ambiguities",
+          "input": {},
+          "output": {
+            "contacto_nombre": "García",
+            "fecha_raw": "mañana",
+            "hora_raw": "14:00",
+            "ubicacion": null,
+            "servicio": null,
+            "ambiguities": [
+              {
+                "field": "ubicacion",
+                "message": "No se especificó en qué ubicación",
+                "severity": "info"
+              }
+            ],
+            "raw_prompt": "cita pasado mañana 14:00 con Dr. García"
+          },
+          "duration_ms": 0,
+          "confidence": 1.0,
+          "errors": [],
+          "warnings": [
+            "ubicacion: No se especificó en qué ubicación"
+          ]
+        },
+        {
+          "agent": "temporal_reasoning",
+          "status": "success",
+          "message": "Successfully resolved temporal references",
+          "input": {},
+          "output": {
+            "fecha": "2026-01-29",
+            "hora_inicio": "14:00",
+            "hora_fin": "15:00",
+            "timezone": "America/Mexico_City",
+            "resolved_datetime": "2026-01-29T14:00:00"
+          },
+          "duration_ms": 0,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "geo_reasoning",
+          "status": "error",
+          "message": "No locations available for this contact",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "validation",
+          "status": "success",
+          "message": "All validations passed",
+          "input": {},
+          "output": {
+            "fecha": "2026-01-29",
+            "hora_inicio": "14:00",
+            "hora_fin": "15:00",
+            "contacto_id": "contact_07255ac6",
+            "contacto_nombre": "García"
+          },
+          "duration_ms": 0,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "availability",
+          "status": "error",
+          "message": "Contact not available: Contacto inactivo",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [
+            "Reason: Contacto inactivo"
+          ],
+          "warnings": []
+        },
+        {
+          "agent": "negotiation",
+          "status": "warning",
+          "message": "No alternative slots found",
+          "input": {},
+          "output": {
+            "has_alternatives": false,
+            "suggestions": [],
+            "total_suggestions_evaluated": 0
+          },
+          "duration_ms": 34,
+          "confidence": 0.3,
+          "errors": [],
+          "warnings": [
+            "Could not find alternative appointment times"
+          ]
+        }
+      ],
+      "final_status": "conflict",
+      "final_output": {},
+      "total_duration_ms": 35,
+      "created_at": "2026-01-28T08:00:03.093256"
+    }
+  ]
 }

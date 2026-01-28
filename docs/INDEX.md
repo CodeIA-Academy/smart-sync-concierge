@@ -37,6 +37,8 @@
 ### 📖 Guías
 - [SETUP.md](SETUP.md) - Instrucciones de setup del desarrollo
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Instrucciones para deployment en producción
+- [TESTING_WITH_POSTMAN.md](TESTING_WITH_POSTMAN.md) - Guía completa para testear con Postman
+- [POSTMAN_COLLECTION.json](POSTMAN_COLLECTION.json) - Colección de requests para importar
 
 ---
 

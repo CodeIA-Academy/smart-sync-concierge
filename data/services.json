@@ -1,9 +1,18 @@
 {
   "metadata": {
     "version": "1.0.0",
-    "last_updated": null,
-    "total_services": 0,
+    "last_updated": "2026-01-28T07:48:49.001288",
+    "total_services": 1,
     "description": "Storage for service/appointment type catalog in MVP (v0.1.0)"
   },
-  "services": []
+  "services": [
+    {
+      "nombre": "Consulta de Cardiología",
+      "descripcion": "Consulta cardiológica completa",
+      "duracion": 45,
+      "id": "service_190c0b0d",
+      "created_at": "2026-01-28T07:48:49.001282",
+      "updated_at": "2026-01-28T07:48:49.001286"
+    }
+  ]
 }

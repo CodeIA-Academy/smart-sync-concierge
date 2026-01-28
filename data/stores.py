@@ -282,7 +282,7 @@ class ContactStore(BaseStore):
                 return contact
         return None
 
-    def create(self, contact_data: Dict[str, Any]) -> Dict[str, Any]]:
+    def create(self, contact_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new contact."""
         data = self._read_data()
         contacts = data.get('contacts', [])
@@ -400,7 +400,7 @@ class ServiceStore(BaseStore):
                 return service
         return None
 
-    def create(self, service_data: Dict[str, Any]) -> Dict[str, Any]]:
+    def create(self, service_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new service."""
         data = self._read_data()
         services = data.get('services', [])

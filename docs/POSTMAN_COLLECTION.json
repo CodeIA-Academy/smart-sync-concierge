@@ -2,40 +2,13 @@
   "info": {
     "_postman_id": "smart-sync-concierge-v0.2.0",
     "name": "Smart-Sync Concierge API v0.2.0",
-    "description": "Complete testing collection for Phase 3 AI Agent Integration\n\nInstructions:\n1. Import this collection into Postman\n2. Set the 'base_url' variable to http://localhost:9000\n3. Start with 'Health Check' to verify server is running\n4. Use 'Create Appointment' to trigger the AI pipeline\n5. View the trace_id in the response\n6. Use 'Get Specific Trace' to see all agent decisions\n\nFeatures:\n- 20+ pre-configured requests\n- Environment variables for easy configuration\n- Test scripts for validation\n- Pre-request scripts for automation\n- Response examples for reference",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "variable": [
-      {
-        "key": "base_url",
-        "value": "http://localhost:9000",
-        "description": "Base URL for API (change port if needed)"
-      },
-      {
-        "key": "api_path",
-        "value": "/api/v1",
-        "description": "API version path"
-      },
-      {
-        "key": "trace_id",
-        "value": "",
-        "description": "Trace ID from last appointment creation (auto-set by scripts)"
-      },
-      {
-        "key": "appointment_id",
-        "value": "",
-        "description": "Appointment ID from last creation (auto-set by scripts)"
-      },
-      {
-        "key": "contact_id",
-        "value": "contact_07255ac6",
-        "description": "Test contact ID (update after creating new contact)"
-      }
-    ]
+    "description": "Complete testing collection for Phase 3 AI Agent Integration\n\nQuick Start:\n1. Import this collection\n2. Set base_url to http://localhost:9000 (or your server)\n3. Go to 'Quick Start' folder and run requests in order\n4. trace_id auto-populates in following requests\n\nFeatures:\n- 20+ requests organized by feature\n- Auto-populating variables (trace_id, appointment_id)\n- Test scripts for validation\n- Example responses for reference",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "Quick Start - Run These First",
-      "description": "Start here to verify everything works",
+      "description": "3 essential requests to get started immediately",
       "item": [
         {
           "name": "1. Health Check",
@@ -48,24 +21,20 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/health/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "health", ""]
+              "raw": "{{base_url}}/api/v1/health/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health",
+                ""
+              ]
             },
-            "description": "Verify API is running. Should return status: 'healthy'"
+            "description": "Verify the API is running. Returns status: 'healthy'"
           },
-          "response": [
-            {
-              "name": "Success",
-              "originalRequest": {
-                "method": "GET",
-                "url": "http://localhost:9000/api/v1/health/"
-              },
-              "status": "OK",
-              "code": 200,
-              "body": "{\n  \"status\": \"healthy\",\n  \"message\": \"Smart-Sync Concierge API is running\",\n  \"version\": \"0.1.0\",\n  \"timestamp\": null\n}"
-            }
-          ]
+          "response": []
         },
         {
           "name": "2. Create Appointment (Simple)",
@@ -74,14 +43,21 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "// Save trace_id for next requests",
+                  "// Auto-save trace_id from response",
                   "if (pm.response.code === 201 || pm.response.code === 400 || pm.response.code === 409) {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('trace_id', jsonData.trace_id);",
-                  "  pm.environment.set('appointment_id', jsonData.data?.id || 'N/A');",
-                  "  console.log('Trace ID saved:', jsonData.trace_id);",
+                  "  try {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.globals.set('trace_id', jsonData.trace_id);",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "      pm.globals.set('appointment_id', jsonData.data.id);",
+                  "    }",
+                  "    console.log('✓ Trace ID saved: ' + jsonData.trace_id);",
+                  "  } catch(e) {",
+                  "    console.log('Could not parse response');",
+                  "  }",
                   "}"
-                ]
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -95,19 +71,26 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"prompt\": \"cita mañana 10am con Dr. García\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"test_user_001\"\n}"
+              "raw": "{\\n  \\\"prompt\\\": \\\"cita mañana 10am con Dr. García\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_test_001\\\"\\n}"
             },
             "url": {
-              "raw": "{{base_url}}{{api_path}}/appointments/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "appointments", ""]
+              "raw": "{{base_url}}/api/v1/appointments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "appointments",
+                ""
+              ]
             },
-            "description": "Create appointment with natural language prompt. Returns trace_id automatically saved to {{trace_id}}"
+            "description": "Create an appointment using natural language AI processing. trace_id auto-saves for next request."
           },
           "response": []
         },
         {
-          "name": "3. View Trace Details (Use trace_id from above)",
+          "name": "3. View Trace Details",
           "request": {
             "method": "GET",
             "header": [
@@ -117,11 +100,19 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "{{trace_id}}", ""]
+              "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "{{trace_id}}",
+                ""
+              ]
             },
-            "description": "Get full trace details with all agent decisions. trace_id auto-filled from previous request."
+            "description": "See all agent decisions for the appointment you just created (trace_id auto-filled)"
           },
           "response": []
         }
@@ -141,12 +132,19 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/health/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "health", ""]
-            },
-            "description": "Check if API is running"
-          }
+              "raw": "{{base_url}}/api/v1/health/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "health",
+                ""
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "API Root",
@@ -159,12 +157,18 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", ""]
-            },
-            "description": "Get API root with available endpoints"
-          }
+              "raw": "{{base_url}}/api/v1/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                ""
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -180,9 +184,10 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "pm.environment.set('trace_id', jsonData.trace_id);",
-                  "console.log('✓ Trace ID:', jsonData.trace_id);"
-                ]
+                  "pm.globals.set('trace_id', jsonData.trace_id);",
+                  "console.log('✓ Trace ID: ' + jsonData.trace_id);"
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -196,15 +201,23 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"prompt\": \"cita mañana 9am con Dr. García\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"user_001\"\n}"
+              "raw": "{\\n  \\\"prompt\\\": \\\"cita mañana 9am con Dr. García\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_001\\\"\\n}"
             },
             "url": {
-              "raw": "{{base_url}}{{api_path}}/appointments/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "appointments", ""]
+              "raw": "{{base_url}}/api/v1/appointments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "appointments",
+                ""
+              ]
             },
-            "description": "Create appointment that should succeed. Returns 201 Created with appointment data."
-          }
+            "description": "Create appointment that should succeed. Returns 201 Created."
+          },
+          "response": []
         },
         {
           "name": "Create - Conflict Case",
@@ -214,9 +227,10 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "pm.environment.set('trace_id', jsonData.trace_id);",
-                  "console.log('✓ Conflict detected. Suggestions:', jsonData.suggestions?.length);"
-                ]
+                  "pm.globals.set('trace_id', jsonData.trace_id);",
+                  "console.log('✓ Conflict detected with ' + (jsonData.suggestions || []).length + ' suggestions');"
+                ],
+                "type": "text/javascript"
               }
             }
           ],
@@ -230,15 +244,23 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"prompt\": \"cita mañana 10am con Dr. García\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"user_002\"\n}"
+              "raw": "{\\n  \\\"prompt\\\": \\\"cita mañana 10am con Dr. García\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_002\\\"\\n}"
             },
             "url": {
-              "raw": "{{base_url}}{{api_path}}/appointments/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "appointments", ""]
+              "raw": "{{base_url}}/api/v1/appointments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "appointments",
+                ""
+              ]
             },
-            "description": "Create appointment with time conflict. Returns 409 Conflict with alternative suggestions from NegotiationAgent."
-          }
+            "description": "Create appointment with time conflict. Returns 409 Conflict with alternative suggestions."
+          },
+          "response": []
         },
         {
           "name": "Create - Ambiguous Case",
@@ -252,15 +274,23 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"prompt\": \"necesito una cita\",\n  \"user_timezone\": \"America/Mexico_City\",\n  \"user_id\": \"user_003\"\n}"
+              "raw": "{\\n  \\\"prompt\\\": \\\"necesito una cita\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_003\\\"\\n}"
             },
             "url": {
-              "raw": "{{base_url}}{{api_path}}/appointments/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "appointments", ""]
+              "raw": "{{base_url}}/api/v1/appointments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "appointments",
+                ""
+              ]
             },
-            "description": "Create appointment with ambiguous prompt (missing date/time). ParsingAgent detects issue. Returns 400 Bad Request."
-          }
+            "description": "Create with ambiguous prompt (missing date/time). Returns 400 Bad Request."
+          },
+          "response": []
         },
         {
           "name": "List Appointments",
@@ -273,18 +303,26 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/appointments/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "appointments", ""]
+              "raw": "{{base_url}}/api/v1/appointments/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "appointments",
+                ""
+              ]
             },
             "description": "List all appointments"
-          }
+          },
+          "response": []
         }
       ]
     },
     {
       "name": "Traces - Observability",
-      "description": "View DecisionTraces and agent decisions. Auto-set trace_id from 'Create Appointment' requests.",
+      "description": "View DecisionTraces and agent decisions. Auto-set trace_id from appointment requests.",
       "item": [
         {
           "name": "List All Traces",
@@ -297,12 +335,20 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", ""]
+              "raw": "{{base_url}}/api/v1/traces/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                ""
+              ]
             },
-            "description": "List all DecisionTraces with pagination (50 items/page)"
-          }
+            "description": "List all DecisionTraces with pagination"
+          },
+          "response": []
         },
         {
           "name": "Get Specific Trace",
@@ -315,12 +361,21 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "{{trace_id}}", ""]
+              "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "{{trace_id}}",
+                ""
+              ]
             },
             "description": "Get details of specific trace (auto-filled {{trace_id}})"
-          }
+          },
+          "response": []
         },
         {
           "name": "Filter by Status (success)",
@@ -333,19 +388,27 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/by_status/?status=success",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "by_status", ""],
+              "raw": "{{base_url}}/api/v1/traces/by_status/?status=success",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "by_status",
+                ""
+              ],
               "query": [
                 {
                   "key": "status",
-                  "value": "success",
-                  "disabled": false
+                  "value": "success"
                 }
               ]
             },
             "description": "Filter traces by status. Try: success, error, conflict"
-          }
+          },
+          "response": []
         },
         {
           "name": "Filter by Status (error)",
@@ -358,19 +421,26 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/by_status/?status=error",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "by_status", ""],
+              "raw": "{{base_url}}/api/v1/traces/by_status/?status=error",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "by_status",
+                ""
+              ],
               "query": [
                 {
                   "key": "status",
-                  "value": "error",
-                  "disabled": false
+                  "value": "error"
                 }
               ]
-            },
-            "description": "Filter traces by status (error)"
-          }
+            }
+          },
+          "response": []
         },
         {
           "name": "Filter by Status (conflict)",
@@ -383,19 +453,26 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/by_status/?status=conflict",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "by_status", ""],
+              "raw": "{{base_url}}/api/v1/traces/by_status/?status=conflict",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "by_status",
+                ""
+              ],
               "query": [
                 {
                   "key": "status",
-                  "value": "conflict",
-                  "disabled": false
+                  "value": "conflict"
                 }
               ]
-            },
-            "description": "Filter traces by status (conflict)"
-          }
+            }
+          },
+          "response": []
         },
         {
           "name": "Filter by User",
@@ -408,19 +485,27 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/by_user/?user_id=user_001",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "by_user", ""],
+              "raw": "{{base_url}}/api/v1/traces/by_user/?user_id=user_001",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "by_user",
+                ""
+              ],
               "query": [
                 {
                   "key": "user_id",
-                  "value": "user_001",
-                  "disabled": false
+                  "value": "user_001"
                 }
               ]
             },
             "description": "Filter traces by user_id (change query param)"
-          }
+          },
+          "response": []
         },
         {
           "name": "Get Agent Decisions",
@@ -433,12 +518,22 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/agents/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "{{trace_id}}", "agents", ""]
+              "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/agents/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "{{trace_id}}",
+                "agents",
+                ""
+              ]
             },
             "description": "Get decisions from each of the 6 agents (auto-filled {{trace_id}})"
-          }
+          },
+          "response": []
         },
         {
           "name": "Get Performance Metrics",
@@ -451,12 +546,22 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/traces/{{trace_id}}/metrics/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "traces", "{{trace_id}}", "metrics", ""]
+              "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/metrics/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "traces",
+                "{{trace_id}}",
+                "metrics",
+                ""
+              ]
             },
             "description": "Get performance metrics for trace (auto-filled {{trace_id}})"
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -474,12 +579,20 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/contacts/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "contacts", ""]
+              "raw": "{{base_url}}/api/v1/contacts/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contacts",
+                ""
+              ]
             },
             "description": "List all contacts (doctors, staff)"
-          }
+          },
+          "response": []
         },
         {
           "name": "Create Contact",
@@ -493,15 +606,23 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nombre\": \"Dr. New Doctor\",\n  \"especialidad\": \"Medicina General\",\n  \"email\": \"doctor@clinic.com\",\n  \"telefono\": \"5551234567\"\n}"
+              "raw": "{\\n  \\\"nombre\\\": \\\"Dr. New Doctor\\\",\\n  \\\"especialidad\\\": \\\"Medicina General\\\",\\n  \\\"email\\\": \\\"doctor@clinic.com\\\",\\n  \\\"telefono\\\": \\\"5551234567\\\"\\n}"
             },
             "url": {
-              "raw": "{{base_url}}{{api_path}}/contacts/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "contacts", ""]
+              "raw": "{{base_url}}/api/v1/contacts/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "contacts",
+                ""
+              ]
             },
             "description": "Create new contact"
-          }
+          },
+          "response": []
         }
       ]
     },
@@ -519,14 +640,39 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}{{api_path}}/services/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "services", ""]
+              "raw": "{{base_url}}/api/v1/services/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "services",
+                ""
+              ]
             },
             "description": "List all services"
-          }
+          },
+          "response": []
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9000",
+      "type": "default"
+    },
+    {
+      "key": "trace_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "appointment_id",
+      "value": "",
+      "type": "default"
     }
   ]
 }

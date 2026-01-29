@@ -21,8 +21,14 @@ if not SECRET_KEY:
     SECRET_KEY = get_random_secret_key()
 
 # Must be configured for specific production domain
-allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
-ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',')]
+allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', '')
+if allowed_hosts_str:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',')]
+else:
+    # Fallback: allow all hosts (should be restricted in production)
+    # This is temporary to allow EasyPanel health checks while we diagnose the issue
+    ALLOWED_HOSTS = ['*']
+    print("[DJANGO] WARNING: ALLOWED_HOSTS not configured, allowing all hosts")
 print(f"[DJANGO] ALLOWED_HOSTS configured: {ALLOWED_HOSTS}")
 
 # ============================================================================

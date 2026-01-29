@@ -2,59 +2,39 @@
   "info": {
     "_postman_id": "smart-sync-concierge-v0.2.0",
     "name": "Smart-Sync Concierge API v0.2.0",
-    "description": "Complete testing collection for Phase 3 AI Agent Integration\n\nQuick Start:\n1. Import this collection\n2. Set base_url to http://localhost:9000 (or your server)\n3. Go to 'Quick Start' folder and run requests in order\n4. trace_id auto-populates in following requests\n\nFeatures:\n- 20+ requests organized by feature\n- Auto-populating variables (trace_id, appointment_id)\n- Test scripts for validation\n- Example responses for reference",
+    "description": "Testing collection for Smart-Sync Concierge Phase 3\n\n1. Import this collection\n2. Edit base_url variable: http://localhost:9000\n3. Run Quick Start requests first",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Quick Start - Run These First",
-      "description": "3 essential requests to get started immediately",
+      "name": "Quick Start",
       "item": [
         {
           "name": "1. Health Check",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/health/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "health",
-                ""
-              ]
-            },
-            "description": "Verify the API is running. Returns status: 'healthy'"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health", ""]
+            }
           },
           "response": []
         },
         {
-          "name": "2. Create Appointment (Simple)",
+          "name": "2. Create Appointment",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "// Auto-save trace_id from response",
-                  "if (pm.response.code === 201 || pm.response.code === 400 || pm.response.code === 409) {",
+                  "if (pm.response.code >= 200 && pm.response.code < 500) {",
                   "  try {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.globals.set('trace_id', jsonData.trace_id);",
-                  "    if (jsonData.data && jsonData.data.id) {",
-                  "      pm.globals.set('appointment_id', jsonData.data.id);",
-                  "    }",
-                  "    console.log('✓ Trace ID saved: ' + jsonData.trace_id);",
-                  "  } catch(e) {",
-                  "    console.log('Could not parse response');",
-                  "  }",
+                  "    var data = pm.response.json();",
+                  "    pm.globals.set('trace_id', data.trace_id);",
+                  "    console.log('✓ Trace ID saved: ' + data.trace_id);",
+                  "  } catch(e) { console.log('No trace_id in response'); }",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -71,21 +51,13 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \\\"prompt\\\": \\\"cita mañana 10am con Dr. García\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_test_001\\\"\\n}"
+              "raw": "{\"prompt\": \"cita mañana 10am con Dr. García\", \"user_timezone\": \"America/Mexico_City\", \"user_id\": \"user_001\"}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/appointments/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
-            },
-            "description": "Create an appointment using natural language AI processing. trace_id auto-saves for next request."
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
+            }
           },
           "response": []
         },
@@ -93,89 +65,33 @@
           "name": "3. View Trace Details",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "{{trace_id}}",
-                ""
-              ]
-            },
-            "description": "See all agent decisions for the appointment you just created (trace_id auto-filled)"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", ""]
+            }
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Health & Status",
+      "name": "Appointments",
       "item": [
         {
-          "name": "Health Check",
+          "name": "List Appointments",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/health/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "health",
-                ""
-              ]
+              "raw": "{{base_url}}/api/v1/appointments/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
             }
           },
           "response": []
         },
-        {
-          "name": "API Root",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                ""
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Appointments - AI Pipeline",
-      "description": "Create appointments using natural language. AI processes through 6-agent pipeline.",
-      "item": [
         {
           "name": "Create - Success Case",
           "event": [
@@ -183,9 +99,9 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "var jsonData = pm.response.json();",
-                  "pm.globals.set('trace_id', jsonData.trace_id);",
-                  "console.log('✓ Trace ID: ' + jsonData.trace_id);"
+                  "if (pm.response.code >= 200 && pm.response.code < 500) {",
+                  "  try { pm.globals.set('trace_id', pm.response.json().trace_id); } catch(e) {}",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -194,28 +110,17 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              {"key": "Content-Type", "value": "application/json"}
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \\\"prompt\\\": \\\"cita mañana 9am con Dr. García\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_001\\\"\\n}"
+              "raw": "{\"prompt\": \"cita mañana 9am con Dr. García\", \"user_timezone\": \"America/Mexico_City\", \"user_id\": \"user_001\"}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/appointments/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
-            },
-            "description": "Create appointment that should succeed. Returns 201 Created."
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
+            }
           },
           "response": []
         },
@@ -226,9 +131,9 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "var jsonData = pm.response.json();",
-                  "pm.globals.set('trace_id', jsonData.trace_id);",
-                  "console.log('✓ Conflict detected with ' + (jsonData.suggestions || []).length + ' suggestions');"
+                  "if (pm.response.code >= 200 && pm.response.code < 500) {",
+                  "  try { pm.globals.set('trace_id', pm.response.json().trace_id); } catch(e) {}",
+                  "}"
                 ],
                 "type": "text/javascript"
               }
@@ -237,28 +142,17 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              {"key": "Content-Type", "value": "application/json"}
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \\\"prompt\\\": \\\"cita mañana 10am con Dr. García\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_002\\\"\\n}"
+              "raw": "{\"prompt\": \"cita mañana 10am con Dr. García\", \"user_timezone\": \"America/Mexico_City\", \"user_id\": \"user_002\"}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/appointments/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
-            },
-            "description": "Create appointment with time conflict. Returns 409 Conflict with alternative suggestions."
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
+            }
           },
           "response": []
         },
@@ -267,86 +161,35 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              {"key": "Content-Type", "value": "application/json"}
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \\\"prompt\\\": \\\"necesito una cita\\\",\\n  \\\"user_timezone\\\": \\\"America/Mexico_City\\\",\\n  \\\"user_id\\\": \\\"user_003\\\"\\n}"
+              "raw": "{\"prompt\": \"necesito una cita\", \"user_timezone\": \"America/Mexico_City\", \"user_id\": \"user_003\"}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/appointments/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
-            },
-            "description": "Create with ambiguous prompt (missing date/time). Returns 400 Bad Request."
-          },
-          "response": []
-        },
-        {
-          "name": "List Appointments",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/appointments/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "appointments",
-                ""
-              ]
-            },
-            "description": "List all appointments"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "appointments", ""]
+            }
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Traces - Observability",
-      "description": "View DecisionTraces and agent decisions. Auto-set trace_id from appointment requests.",
+      "name": "Traces",
       "item": [
         {
           "name": "List All Traces",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/traces/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                ""
-              ]
-            },
-            "description": "List all DecisionTraces with pagination"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", ""]
+            }
           },
           "response": []
         },
@@ -354,156 +197,12 @@
           "name": "Get Specific Trace",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "{{trace_id}}",
-                ""
-              ]
-            },
-            "description": "Get details of specific trace (auto-filled {{trace_id}})"
-          },
-          "response": []
-        },
-        {
-          "name": "Filter by Status (success)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/traces/by_status/?status=success",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "by_status",
-                ""
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "success"
-                }
-              ]
-            },
-            "description": "Filter traces by status. Try: success, error, conflict"
-          },
-          "response": []
-        },
-        {
-          "name": "Filter by Status (error)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/traces/by_status/?status=error",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "by_status",
-                ""
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "error"
-                }
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", ""]
             }
-          },
-          "response": []
-        },
-        {
-          "name": "Filter by Status (conflict)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/traces/by_status/?status=conflict",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "by_status",
-                ""
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": "conflict"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Filter by User",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/traces/by_user/?user_id=user_001",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "by_user",
-                ""
-              ],
-              "query": [
-                {
-                  "key": "user_id",
-                  "value": "user_001"
-                }
-              ]
-            },
-            "description": "Filter traces by user_id (change query param)"
           },
           "response": []
         },
@@ -511,27 +210,12 @@
           "name": "Get Agent Decisions",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/agents/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "{{trace_id}}",
-                "agents",
-                ""
-              ]
-            },
-            "description": "Get decisions from each of the 6 agents (auto-filled {{trace_id}})"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", "agents", ""]
+            }
           },
           "response": []
         },
@@ -539,27 +223,68 @@
           "name": "Get Performance Metrics",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/traces/{{trace_id}}/metrics/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "traces",
-                "{{trace_id}}",
-                "metrics",
-                ""
-              ]
-            },
-            "description": "Get performance metrics for trace (auto-filled {{trace_id}})"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "{{trace_id}}", "metrics", ""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter - By Status (success)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/traces/by_status/?status=success",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_status", ""],
+              "query": [{"key": "status", "value": "success"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter - By Status (error)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/traces/by_status/?status=error",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_status", ""],
+              "query": [{"key": "status", "value": "error"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter - By Status (conflict)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/traces/by_status/?status=conflict",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_status", ""],
+              "query": [{"key": "status", "value": "conflict"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Filter - By User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/traces/by_user/?user_id=user_001",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "traces", "by_user", ""],
+              "query": [{"key": "user_id", "value": "user_001"}]
+            }
           },
           "response": []
         }
@@ -572,25 +297,12 @@
           "name": "List Contacts",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/contacts/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "contacts",
-                ""
-              ]
-            },
-            "description": "List all contacts (doctors, staff)"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contacts", ""]
+            }
           },
           "response": []
         },
@@ -599,28 +311,17 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              {"key": "Content-Type", "value": "application/json"}
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\\n  \\\"nombre\\\": \\\"Dr. New Doctor\\\",\\n  \\\"especialidad\\\": \\\"Medicina General\\\",\\n  \\\"email\\\": \\\"doctor@clinic.com\\\",\\n  \\\"telefono\\\": \\\"5551234567\\\"\\n}"
+              "raw": "{\"nombre\": \"Dr. Nuevo\", \"especialidad\": \"Medicina\", \"email\": \"doctor@clinic.com\"}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/contacts/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "contacts",
-                ""
-              ]
-            },
-            "description": "Create new contact"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "contacts", ""]
+            }
           },
           "response": []
         }
@@ -633,25 +334,12 @@
           "name": "List Services",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/services/",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "services",
-                ""
-              ]
-            },
-            "description": "List all services"
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "services", ""]
+            }
           },
           "response": []
         }
@@ -662,17 +350,12 @@
     {
       "key": "base_url",
       "value": "http://localhost:9000",
-      "type": "default"
+      "type": "string"
     },
     {
       "key": "trace_id",
       "value": "",
-      "type": "default"
-    },
-    {
-      "key": "appointment_id",
-      "value": "",
-      "type": "default"
+      "type": "string"
     }
   ]
 }

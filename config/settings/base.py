@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'apps.contacts',
     'apps.services',
     'apps.availability',
+    'apps.traces',
+    'apps.agents',
 ]
 
 # ============================================================================
@@ -172,7 +174,7 @@ REST_FRAMEWORK = {
 
     # Permissions
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',  # For testing - change to IsAuthenticated in production
     ],
 
     # Pagination

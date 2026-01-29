@@ -8,7 +8,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
-from data.stores import TraceStore
 
 
 class TracePagination(PageNumberPagination):
@@ -45,6 +44,7 @@ class TracesViewSet(viewsets.ViewSet):
         - page: Page number
         - page_size: Items per page
         """
+        from data.stores import TraceStore
         store = TraceStore()
         traces = store.list_all()
 
@@ -86,6 +86,7 @@ class TracesViewSet(viewsets.ViewSet):
 
         Returns complete trace with all agent decisions.
         """
+        from data.stores import TraceStore
         store = TraceStore()
         trace = store.get_by_id(pk)
 
@@ -120,6 +121,7 @@ class TracesViewSet(viewsets.ViewSet):
                 'message': 'status parameter is required',
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        from data.stores import TraceStore
         store = TraceStore()
         traces = store.list_by_status(status_filter)
 
@@ -161,6 +163,7 @@ class TracesViewSet(viewsets.ViewSet):
                 'message': 'user_id parameter is required',
             }, status=status.HTTP_400_BAD_REQUEST)
 
+        from data.stores import TraceStore
         store = TraceStore()
         traces = store.list_by_user(user_id_filter)
 
@@ -194,6 +197,7 @@ class TracesViewSet(viewsets.ViewSet):
 
         Returns detailed information for each agent in the trace.
         """
+        from data.stores import TraceStore
         store = TraceStore()
         trace = store.get_by_id(pk)
 
@@ -223,6 +227,7 @@ class TracesViewSet(viewsets.ViewSet):
 
         Includes timing information for each agent and overall pipeline.
         """
+        from data.stores import TraceStore
         store = TraceStore()
         trace = store.get_by_id(pk)
 

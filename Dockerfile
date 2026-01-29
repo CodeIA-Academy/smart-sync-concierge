@@ -43,6 +43,7 @@ RUN mkdir -p /app/logs /app/data /app/staticfiles && \
 ENV PATH=/home/django/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app:$PYTHONPATH \
     PORT=9000
 
 # Switch to non-root user

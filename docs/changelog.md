@@ -29,10 +29,12 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Improved production.py flexibility for different deployment scenarios
 
 #### Docker & Deployment
+- Fixed Dockerfile: Create logs/data/staticfiles directories before switching to non-root user
 - Enhanced docker-entrypoint.sh to parse DATABASE_URL and extract connection details
 - Fixed PostgreSQL readiness check to work with connection string format
 - Added graceful fallback when DATABASE_URL is not configured
 - Improved initialization output with colored status messages
+- Resolved PermissionError when creating required directories in container
 
 #### Documentation
 - Added EASYPANEL_DEPLOYMENT_FIX.md - Complete EasyPanel configuration guide
@@ -42,6 +44,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 #### CI/CD
 - Deployment process now properly handles database initialization in containers
 - EasyPanel integration ready for production with HTTPS and PostgreSQL
+- Container permissions fixed for production-grade non-root execution
 
 ---
 

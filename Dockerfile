@@ -35,6 +35,10 @@ COPY --from=builder /root/.local /home/django/.local
 # Copy application code
 COPY --chown=django:django . .
 
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/logs /app/data /app/staticfiles && \
+    chown -R django:django /app/logs /app/data /app/staticfiles
+
 # Set environment variables
 ENV PATH=/home/django/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \

@@ -62,17 +62,18 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Use dj-database-url to configure PostgreSQL from DATABASE_URL environment variable
 # DATABASE_URL must be set in production environment
-if os.environ.get('DATABASE_URL'):
-    print("[DJANGO] DATABASE_URL detected - using PostgreSQL")
+try:
+    print(f"[DJANGO] DATABASE_URL value: {os.environ.get('DATABASE_URL', 'NOT SET')[:50] if os.environ.get('DATABASE_URL') else 'NOT SET'}...")
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
             conn_health_checks=True,
         )
     }
-else:
-    # Fallback to SQLite if DATABASE_URL is not set (for testing only)
-    print("[DJANGO] DATABASE_URL NOT found - using SQLite fallback")
+    print("[DJANGO] Successfully configured PostgreSQL from DATABASE_URL")
+except Exception as e:
+    print(f"[DJANGO] Error configuring PostgreSQL: {e}")
+    print("[DJANGO] Falling back to SQLite")
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

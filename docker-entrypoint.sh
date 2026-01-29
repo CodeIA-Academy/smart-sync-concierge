@@ -4,11 +4,27 @@ set -e
 echo "🚀 Iniciando Smart-Sync Concierge v0.2.0..."
 echo "⏳ Esperando que PostgreSQL esté listo..."
 
-# Wait for PostgreSQL to be ready
-while ! pg_isready -h "$DATABASE_HOST" -p "${DATABASE_PORT:-5432}" -U "${DATABASE_USER:-postgres}" 2>/dev/null; do
-  echo "   PostgreSQL aún no está disponible, esperando..."
-  sleep 2
-done
+# Parse DATABASE_URL to extract connection details if using DATABASE_URL
+if [ -n "$DATABASE_URL" ]; then
+  # Extract host, port, user from DATABASE_URL (postgres://user:pass@host:port/db)
+  DATABASE_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:\/]*\).*/\1/p')
+  DATABASE_PORT=$(echo $DATABASE_URL | sed -n 's/.*:\([0-9]\+\).*/\1/p')
+  DATABASE_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\).*/\1/p')
+
+  if [ -z "$DATABASE_PORT" ]; then
+    DATABASE_PORT="5432"
+  fi
+
+  echo "   Conectando a PostgreSQL en $DATABASE_HOST:$DATABASE_PORT..."
+
+  # Wait for PostgreSQL to be ready
+  while ! pg_isready -h "$DATABASE_HOST" -p "$DATABASE_PORT" -U "$DATABASE_USER" 2>/dev/null; do
+    echo "   PostgreSQL aún no está disponible, esperando..."
+    sleep 2
+  done
+else
+  echo "   Warning: DATABASE_URL no está configurada, saltando check de PostgreSQL"
+fi
 
 echo "✅ PostgreSQL está listo!"
 

@@ -21,7 +21,9 @@ if not SECRET_KEY:
     SECRET_KEY = get_random_secret_key()
 
 # Must be configured for specific production domain
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost').split(',')
+allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',')]
+print(f"[DJANGO] ALLOWED_HOSTS configured: {ALLOWED_HOSTS}")
 
 # ============================================================================
 # HTTPS & SECURITY

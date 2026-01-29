@@ -4,6 +4,7 @@ Inherits from base.py with production-specific security configurations.
 """
 
 import os
+import dj_database_url
 from .base import *
 
 # ============================================================================
@@ -53,30 +54,17 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
 CORS_ALLOW_CREDENTIALS = True
 
 # ============================================================================
-# DATABASE - PRODUCTION
+# DATABASE - PRODUCTION (PostgreSQL)
 # ============================================================================
-# This will be updated to PostgreSQL when scaling beyond MVP
 
+# Use dj-database-url to configure PostgreSQL from DATABASE_URL environment variable
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.environ.get('DATABASE_NAME', BASE_DIR / 'db.sqlite3'),
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 }
-
-# Future PostgreSQL configuration (commented for reference):
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.environ.get('DB_NAME', 'smartsync'),
-#         'USER': os.environ.get('DB_USER', 'postgres'),
-#         'PASSWORD': os.environ.get('DB_PASSWORD'),
-#         'HOST': os.environ.get('DB_HOST', 'localhost'),
-#         'PORT': os.environ.get('DB_PORT', '5432'),
-#         'ATOMIC_REQUESTS': True,
-#         'CONN_MAX_AGE': 600,
-#     }
-# }
 
 # ============================================================================
 # EMAIL CONFIGURATION - PRODUCTION
@@ -97,8 +85,8 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@smartsync.exa
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# For serving static files through whitenoise or CDN
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Use WhiteNoise to serve static files efficiently in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ============================================================================
 # MEDIA FILES - PRODUCTION
@@ -210,6 +198,20 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
 # )
 
 # ============================================================================
+# MIDDLEWARE - Add WhiteNoise for production static file serving
+# ============================================================================
+
+MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
+# ============================================================================
+# REST FRAMEWORK - PRODUCTION PERMISSIONS
+# ============================================================================
+
+REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+    'rest_framework.permissions.IsAuthenticated',
+]
+
+# ============================================================================
 # ALLOWED ADMIN USERS
 # ============================================================================
 
@@ -224,13 +226,13 @@ ADMINS = [
 # - SECRET_KEY: Django secret key
 # - ALLOWED_HOSTS: Comma-separated list of allowed hosts
 # - CORS_ALLOWED_ORIGINS: Comma-separated list of CORS origins
+# - DATABASE_URL: PostgreSQL connection string (required)
 # - EMAIL_HOST, EMAIL_PORT, EMAIL_USE_TLS, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 # - DEFAULT_FROM_EMAIL: Default email sender
 # - ADMIN_EMAIL: Admin email address
 #
 # Optional:
-# - DATABASE_NAME: Path to SQLite database (default: db.sqlite3)
 # - REDIS_URL: Redis connection URL for caching
-# - AWS_STORAGE_BUCKET_NAME: AWS S3 bucket for media storage
+# - SENTRY_DSN: Sentry error tracking DSN
 #
 # Set DJANGO_SETTINGS_MODULE=config.settings.production before deployment

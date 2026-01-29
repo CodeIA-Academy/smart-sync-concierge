@@ -14,6 +14,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import routers
 from django.contrib.auth import authenticate
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 
 # API Root Information
 from rest_framework.decorators import api_view, permission_classes
@@ -127,6 +128,11 @@ urlpatterns = [
     path('api/v1/', api_root, name='api-root'),
     path('api/v1/health/', health_check, name='health-check'),
     path('api/v1/token-auth/', token_auth, name='token-auth'),
+
+    # API Documentation
+    path('api/v1/docs/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 
     # Apps URLs
     path('api/v1/', include('apps.appointments.urls')),

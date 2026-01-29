@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'drf_spectacular',
 
     # Local apps
     'apps.appointments',
@@ -222,6 +223,9 @@ REST_FRAMEWORK = {
 
     # Defaults
     'DEFAULT_METADATA_CLASS': 'rest_framework.metadata.SimpleMetadata',
+
+    # Schema generation (for API documentation)
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # ============================================================================
@@ -322,4 +326,22 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=24),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ALGORITHM': 'HS256',
+}
+
+# ============================================================================
+# DRF SPECTACULAR - API DOCUMENTATION
+# ============================================================================
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Smart-Sync Concierge API',
+    'DESCRIPTION': 'API para gestión de citas médicas y recursos',
+    'VERSION': '0.1.0',
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.AllowAny'],
+    'SCHEMA_PATH_PREFIX': '/api/v1',
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'displayOperationId': True,
+        'defaultModelsExpandDepth': 2,
+        'defaultModelExpandDepth': 2,
+    },
 }

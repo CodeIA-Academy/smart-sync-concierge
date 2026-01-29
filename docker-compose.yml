@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: smartsync-postgres
+    environment:
+      POSTGRES_DB: smartsync
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smartsync-network
+
+  web:
+    build: .
+    container_name: smartsync-web
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn --bind 0.0.0.0:9000 --workers 3 --timeout 120 config.wsgi:application"
+    ports:
+      - "9000:9000"
+    environment:
+      DEBUG: "False"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DJANGO_SETTINGS_MODULE: "config.settings.development"
+      DATABASE_URL: "postgresql://postgres:postgres123@postgres:5432/smartsync"
+      SECRET_KEY: "django-insecure-dev-key-change-in-production"
+      QWEN_API_KEY: "your-api-key-here"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/api/v1/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - smartsync-network
+
+volumes:
+  postgres_data:
+
+networks:
+  smartsync-network:
+    driver: bridge

@@ -36,14 +36,14 @@ COPY --from=builder /root/.local /home/django/.local
 COPY --chown=django:django . .
 
 # Create necessary directories with proper permissions
-RUN mkdir -p /app/logs /app/data /app/staticfiles && \
-    chown -R django:django /app/logs /app/data /app/staticfiles
+RUN mkdir -p /app/logs /app/data /app/staticfiles /app/static && \
+    chown -R django:django /app/logs /app/data /app/staticfiles /app/static
 
 # Set environment variables
 ENV PATH=/home/django/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app:$PYTHONPATH \
+    PYTHONPATH=/app \
     PORT=9000
 
 # Switch to non-root user

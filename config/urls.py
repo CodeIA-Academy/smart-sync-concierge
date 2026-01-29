@@ -13,11 +13,14 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import routers
+from django.contrib.auth import authenticate
 
 # API Root Information
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.status import HTTP_401_UNAUTHORIZED
+from rest_framework.authtoken.models import Token
 
 
 @api_view(['GET'])
@@ -65,6 +68,57 @@ def health_check(request):
     })
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def token_auth(request):
+    """
+    Login endpoint to obtain authentication token.
+
+    Request body:
+    {
+        "username": "admin",
+        "password": "123456"
+    }
+
+    Response:
+    {
+        "token": "abc123def456...",
+        "user": {
+            "id": 1,
+            "username": "admin"
+        }
+    }
+    """
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if not username or not password:
+        return Response({
+            'status': 'error',
+            'message': 'Nombre de usuario y contraseña requeridos'
+        }, status=HTTP_401_UNAUTHORIZED)
+
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return Response({
+            'status': 'error',
+            'message': 'Credenciales inválidas'
+        }, status=HTTP_401_UNAUTHORIZED)
+
+    token, created = Token.objects.get_or_create(user=user)
+
+    return Response({
+        'status': 'success',
+        'token': token.key,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email
+        }
+    })
+
+
 urlpatterns = [
     # Admin interface
     path('admin/', admin.site.urls),
@@ -72,6 +126,7 @@ urlpatterns = [
     # API Root and Health
     path('api/v1/', api_root, name='api-root'),
     path('api/v1/health/', health_check, name='health-check'),
+    path('api/v1/token-auth/', token_auth, name='token-auth'),
 
     # Apps URLs
     path('api/v1/', include('apps.appointments.urls')),

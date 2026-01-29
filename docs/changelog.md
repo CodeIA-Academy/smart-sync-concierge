@@ -18,6 +18,33 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
 
+## [0.2.1] - 2026-01-29
+
+### 🔧 Bug Fixes & Deployment Improvements
+
+#### Production Settings
+- Fixed SECRET_KEY validation - now generates automatically as fallback for development
+- Made SECURE_SSL_REDIRECT configurable via environment variable
+- Added SECURE_PROXY_SSL_HEADER to detect HTTPS when behind reverse proxy (EasyPanel)
+- Improved production.py flexibility for different deployment scenarios
+
+#### Docker & Deployment
+- Enhanced docker-entrypoint.sh to parse DATABASE_URL and extract connection details
+- Fixed PostgreSQL readiness check to work with connection string format
+- Added graceful fallback when DATABASE_URL is not configured
+- Improved initialization output with colored status messages
+
+#### Documentation
+- Added EASYPANEL_DEPLOYMENT_FIX.md - Complete EasyPanel configuration guide
+- Added EASYPANEL_VERIFICATION_CHECKLIST.md - Step-by-step verification checklist
+- Added scripts/generate_secret_key.py - Helper script for SECRET_KEY generation
+
+#### CI/CD
+- Deployment process now properly handles database initialization in containers
+- EasyPanel integration ready for production with HTTPS and PostgreSQL
+
+---
+
 ## [0.2.0] - 2026-01-27
 
 ### ✨ AI Agent Integration - Phase 3 Complete

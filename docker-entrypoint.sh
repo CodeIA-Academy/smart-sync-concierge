@@ -2,6 +2,11 @@
 set -e
 
 echo "🚀 Iniciando Smart-Sync Concierge v0.2.0..."
+
+# Set production settings module for all Django commands
+export DJANGO_SETTINGS_MODULE=config.settings.production
+echo "   DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE"
+
 echo "⏳ Esperando que PostgreSQL esté listo..."
 
 # Debug: show if DATABASE_URL is set

@@ -4,6 +4,13 @@ set -e
 echo "🚀 Iniciando Smart-Sync Concierge v0.2.0..."
 echo "⏳ Esperando que PostgreSQL esté listo..."
 
+# Debug: show if DATABASE_URL is set
+if [ -n "$DATABASE_URL" ]; then
+  echo "   DATABASE_URL está configurada (primeros 50 caracteres: ${DATABASE_URL:0:50}...)"
+else
+  echo "   ⚠️  DATABASE_URL NO está configurada"
+fi
+
 # Parse DATABASE_URL to extract connection details if using DATABASE_URL
 if [ -n "$DATABASE_URL" ]; then
   # Extract host, port, user from DATABASE_URL (postgres://user:pass@host:port/db)

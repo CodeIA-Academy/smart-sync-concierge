@@ -14,7 +14,7 @@ gunicorn==21.2.0
 whitenoise==6.6.0
 
 # AI/ML
-openai==1.59.0
+openai==1.59.9
 
 # Utilities
 python-dateutil==2.9.0

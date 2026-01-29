@@ -61,13 +61,22 @@ CORS_ALLOW_CREDENTIALS = True
 # ============================================================================
 
 # Use dj-database-url to configure PostgreSQL from DATABASE_URL environment variable
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+# DATABASE_URL must be set in production environment
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    # Fallback to SQLite if DATABASE_URL is not set (for testing only)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # ============================================================================
 # EMAIL CONFIGURATION - PRODUCTION

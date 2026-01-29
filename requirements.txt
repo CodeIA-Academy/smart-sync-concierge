@@ -1,25 +1,30 @@
-# Smart-Sync Concierge - Dependencias
+# Smart-Sync Concierge - Dependencias v0.2.0
 
-# Django Core (Updated for Python 3.9 compatibility)
+# Django Core
 Django==4.2.27
 djangorestframework==3.15.2
 django-cors-headers==4.6.0
 
-# IA/ML
-qwen==2.5.0
-openai==1.59.0  # Para compatibilidad con APIs similares
+# PostgreSQL & Database
+psycopg2-binary==2.9.9
+dj-database-url==2.2.0
 
-# Utilidades
+# Production Server
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# AI/ML
+openai==1.59.0
+
+# Utilities
 python-dateutil==2.9.0
 pytz==2024.2
 pydantic==2.10.4
+python-dotenv==1.0.1
 
-# Desarrollo
+# Development & Testing
 pytest==8.3.4
 pytest-django==4.9.0
 pytest-cov==6.0.0
 black==24.10.0
 ruff==0.8.4
-
-# Seguridad
-python-dotenv==1.0.1

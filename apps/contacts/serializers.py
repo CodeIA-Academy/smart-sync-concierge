@@ -149,10 +149,13 @@ class ContactListSerializer(serializers.Serializer):
     id = serializers.CharField()
     nombre = serializers.CharField()
     tipo = serializers.CharField()
-    especialidad = serializers.CharField(required=False)
+    titulo = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
+    telefono = serializers.CharField(required=False)
+    especialidades = serializers.ListField(required=False)
     activo = serializers.BooleanField()
-    ubicaciones = LocationSerializer(many=True)
+    created_at = serializers.DateTimeField(required=False)
+    updated_at = serializers.DateTimeField(required=False)
 
 
 class ContactAvailabilitySerializer(serializers.Serializer):

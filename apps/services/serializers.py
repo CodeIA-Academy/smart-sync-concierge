@@ -233,9 +233,11 @@ class ServiceListSerializer(serializers.Serializer):
     id = serializers.CharField()
     nombre = serializers.CharField()
     categoria = serializers.CharField()
+    descripcion = serializers.CharField(required=False)
     duracion_minutos = serializers.IntegerField()
     activo = serializers.BooleanField()
-    precio = PrecioSerializer(required=False)
+    created_at = serializers.DateTimeField(required=False)
+    updated_at = serializers.DateTimeField(required=False)
 
 
 class ServiceSuccessResponseSerializer(serializers.Serializer):

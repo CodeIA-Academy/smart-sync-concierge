@@ -59,37 +59,33 @@ class ServiceViewSet(viewsets.ViewSet):
         - page: Page number (default: 1)
         - page_size: Items per page (default: 20, max: 100)
         """
-        from data.stores import ServiceStore
+        from .models import Service
+        from django.db.models import Q
 
-        store = ServiceStore()
-        services = store.list_all()
+        # Start with all services
+        queryset = Service.objects.all()
 
         # Apply filters
         categoria = request.query_params.get('categoria')
         if categoria:
-            services = [s for s in services if s.get('categoria') == categoria]
-
-        subcategoria = request.query_params.get('subcategoria')
-        if subcategoria:
-            services = [s for s in services if s.get('subcategoria') == subcategoria]
+            queryset = queryset.filter(categoria=categoria)
 
         activo = request.query_params.get('activo')
         if activo:
             activo_bool = activo.lower() == 'true'
-            services = [s for s in services if s.get('activo') == activo_bool]
+            queryset = queryset.filter(activo=activo_bool)
 
         buscar = request.query_params.get('buscar')
         if buscar:
             search_term = buscar.lower()
-            services = [
-                s for s in services
-                if search_term in s.get('nombre', '').lower()
-                or search_term in s.get('descripcion', '').lower()
-            ]
+            queryset = queryset.filter(
+                Q(nombre__icontains=search_term) |
+                Q(descripcion__icontains=search_term)
+            )
 
         # Paginate
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(services, request)
+        page = paginator.paginate_queryset(queryset, request)
 
         serializer = ServiceListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)

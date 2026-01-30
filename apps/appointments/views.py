@@ -69,34 +69,28 @@ class AppointmentViewSet(viewsets.ViewSet):
         - page: Page number (default: 1)
         - page_size: Items per page (default: 20, max: 100)
         """
-        from data.stores import AppointmentStore
+        from .models import Appointment
+        from django.db.models import Q
 
-        store = AppointmentStore()
-        appointments = store.list_all()
+        # Start with all appointments
+        queryset = Appointment.objects.all()
 
         # Apply filters
         status_filter = request.query_params.get('status')
         if status_filter:
-            appointments = [apt for apt in appointments if apt.get('status') == status_filter]
+            queryset = queryset.filter(status=status_filter)
 
         fecha_inicio = request.query_params.get('fecha_inicio')
         if fecha_inicio:
-            appointments = [apt for apt in appointments if apt.get('fecha') >= fecha_inicio]
+            queryset = queryset.filter(fecha__gte=fecha_inicio)
 
         fecha_fin = request.query_params.get('fecha_fin')
         if fecha_fin:
-            appointments = [apt for apt in appointments if apt.get('fecha') <= fecha_fin]
-
-        contacto_id = request.query_params.get('contacto_id')
-        if contacto_id:
-            appointments = [
-                apt for apt in appointments
-                if any(p.get('id') == contacto_id for p in apt.get('participantes', []))
-            ]
+            queryset = queryset.filter(fecha__lte=fecha_fin)
 
         # Paginate
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(appointments, request)
+        page = paginator.paginate_queryset(queryset, request)
 
         serializer = AppointmentListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)

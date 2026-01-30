@@ -67,41 +67,33 @@ class ContactViewSet(viewsets.ViewSet):
         - page: Page number (default: 1)
         - page_size: Items per page (default: 20, max: 100)
         """
-        from data.stores import ContactStore
+        from .models import Contact
+        from django.db.models import Q
 
-        store = ContactStore()
-        contacts = store.list_all()
+        # Start with all contacts
+        queryset = Contact.objects.all()
 
         # Apply filters
         tipo = request.query_params.get('tipo')
         if tipo:
-            contacts = [c for c in contacts if c.get('tipo') == tipo]
-
-        especialidad = request.query_params.get('especialidad')
-        if especialidad:
-            contacts = [c for c in contacts if c.get('especialidad') == especialidad]
-
-        categoria = request.query_params.get('categoria')
-        if categoria:
-            contacts = [c for c in contacts if c.get('categoria') == categoria]
+            queryset = queryset.filter(tipo=tipo)
 
         activo = request.query_params.get('activo')
         if activo:
             activo_bool = activo.lower() == 'true'
-            contacts = [c for c in contacts if c.get('activo') == activo_bool]
+            queryset = queryset.filter(activo=activo_bool)
 
         buscar = request.query_params.get('buscar')
         if buscar:
             search_term = buscar.lower()
-            contacts = [
-                c for c in contacts
-                if search_term in c.get('nombre', '').lower()
-                or search_term in c.get('especialidad', '').lower()
-            ]
+            queryset = queryset.filter(
+                Q(nombre__icontains=search_term) |
+                Q(titulo__icontains=search_term)
+            )
 
         # Paginate
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(contacts, request)
+        page = paginator.paginate_queryset(queryset, request)
 
         serializer = ContactListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)

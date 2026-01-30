@@ -1,8 +1,8 @@
 {
   "metadata": {
     "version": "1.0.0",
-    "last_updated": "2026-01-28T07:48:48.401571",
-    "total_contacts": 1,
+    "last_updated": "2026-01-30T09:54:13.784636",
+    "total_contacts": 7,
     "description": "Storage for contact data (doctors, staff, resources) in MVP (v0.1.0)"
   },
   "contacts": [
@@ -14,6 +14,86 @@
       "id": "contact_07255ac6",
       "created_at": "2026-01-28T07:48:48.401406",
       "updated_at": "2026-01-28T07:48:48.401567"
+    },
+    {
+      "id": "contact_29216950",
+      "nombre": "Dr. Juan Pérez",
+      "titulo": "Médico General",
+      "email": "juan.perez@hospital.com",
+      "telefono": "+34912345678",
+      "tipo": "prestador",
+      "especialidades": [
+        "consulta_general",
+        "pediatria"
+      ],
+      "created_at": "2026-01-30T09:53:38.492584",
+      "updated_at": "2026-01-30T09:53:38.492589"
+    },
+    {
+      "id": "contact_9a19da35",
+      "nombre": "Dra. María García",
+      "titulo": "Cardióloga",
+      "email": "maria.garcia@hospital.com",
+      "telefono": "+34987654321",
+      "tipo": "prestador",
+      "especialidades": [
+        "cardiologia"
+      ],
+      "created_at": "2026-01-30T09:53:38.678348",
+      "updated_at": "2026-01-30T09:53:38.678354"
+    },
+    {
+      "id": "contact_4d963b45",
+      "nombre": "Dr. Carlos López",
+      "titulo": "Dermatólogo",
+      "email": "carlos.lopez@hospital.com",
+      "telefono": "+34956789012",
+      "tipo": "prestador",
+      "especialidades": [
+        "dermatologia"
+      ],
+      "created_at": "2026-01-30T09:53:38.692188",
+      "updated_at": "2026-01-30T09:53:38.692206"
+    },
+    {
+      "id": "contact_1962741e",
+      "nombre": "Dr. Juan Pérez",
+      "titulo": "Médico General",
+      "email": "juan.perez@hospital.com",
+      "telefono": "+34912345678",
+      "tipo": "prestador",
+      "especialidades": [
+        "consulta_general",
+        "pediatria"
+      ],
+      "created_at": "2026-01-30T09:54:13.783513",
+      "updated_at": "2026-01-30T09:54:13.783519"
+    },
+    {
+      "id": "contact_e06443fe",
+      "nombre": "Dra. María García",
+      "titulo": "Cardióloga",
+      "email": "maria.garcia@hospital.com",
+      "telefono": "+34987654321",
+      "tipo": "prestador",
+      "especialidades": [
+        "cardiologia"
+      ],
+      "created_at": "2026-01-30T09:54:13.784053",
+      "updated_at": "2026-01-30T09:54:13.784054"
+    },
+    {
+      "id": "contact_b48faf7a",
+      "nombre": "Dr. Carlos López",
+      "titulo": "Dermatólogo",
+      "email": "carlos.lopez@hospital.com",
+      "telefono": "+34956789012",
+      "tipo": "prestador",
+      "especialidades": [
+        "dermatologia"
+      ],
+      "created_at": "2026-01-30T09:54:13.784634",
+      "updated_at": "2026-01-30T09:54:13.784635"
     }
   ]
 }

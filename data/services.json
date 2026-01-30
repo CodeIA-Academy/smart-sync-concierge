@@ -1,8 +1,8 @@
 {
   "metadata": {
     "version": "1.0.0",
-    "last_updated": "2026-01-28T07:48:49.001288",
-    "total_services": 1,
+    "last_updated": "2026-01-30T09:54:13.845599",
+    "total_services": 9,
     "description": "Storage for service/appointment type catalog in MVP (v0.1.0)"
   },
   "services": [
@@ -13,6 +13,78 @@
       "id": "service_190c0b0d",
       "created_at": "2026-01-28T07:48:49.001282",
       "updated_at": "2026-01-28T07:48:49.001286"
+    },
+    {
+      "id": "service_3be82df6",
+      "nombre": "Consulta General",
+      "categoria": "medica",
+      "descripcion": "Consulta médica general",
+      "duracion_minutos": 30,
+      "created_at": "2026-01-30T09:53:38.742519",
+      "updated_at": "2026-01-30T09:53:38.742524"
+    },
+    {
+      "id": "service_df93004e",
+      "nombre": "Consulta Cardiología",
+      "categoria": "medica",
+      "descripcion": "Consulta especializada en cardiología",
+      "duracion_minutos": 45,
+      "created_at": "2026-01-30T09:53:38.878787",
+      "updated_at": "2026-01-30T09:53:38.878791"
+    },
+    {
+      "id": "service_7b0dc520",
+      "nombre": "Consulta Dermatología",
+      "categoria": "medica",
+      "descripcion": "Consulta especializada en dermatología",
+      "duracion_minutos": 40,
+      "created_at": "2026-01-30T09:53:38.907142",
+      "updated_at": "2026-01-30T09:53:38.907147"
+    },
+    {
+      "id": "service_e98d81d7",
+      "nombre": "Consulta Pediatría",
+      "categoria": "medica",
+      "descripcion": "Consulta pediátrica",
+      "duracion_minutos": 25,
+      "created_at": "2026-01-30T09:53:38.935775",
+      "updated_at": "2026-01-30T09:53:38.935780"
+    },
+    {
+      "id": "service_9c3088bd",
+      "nombre": "Consulta General",
+      "categoria": "medica",
+      "descripcion": "Consulta médica general",
+      "duracion_minutos": 30,
+      "created_at": "2026-01-30T09:54:13.815147",
+      "updated_at": "2026-01-30T09:54:13.815151"
+    },
+    {
+      "id": "service_447d0310",
+      "nombre": "Consulta Cardiología",
+      "categoria": "medica",
+      "descripcion": "Consulta especializada en cardiología",
+      "duracion_minutos": 45,
+      "created_at": "2026-01-30T09:54:13.844818",
+      "updated_at": "2026-01-30T09:54:13.844822"
+    },
+    {
+      "id": "service_826a5edd",
+      "nombre": "Consulta Dermatología",
+      "categoria": "medica",
+      "descripcion": "Consulta especializada en dermatología",
+      "duracion_minutos": 40,
+      "created_at": "2026-01-30T09:54:13.845262",
+      "updated_at": "2026-01-30T09:54:13.845263"
+    },
+    {
+      "id": "service_2424c97d",
+      "nombre": "Consulta Pediatría",
+      "categoria": "medica",
+      "descripcion": "Consulta pediátrica",
+      "duracion_minutos": 25,
+      "created_at": "2026-01-30T09:54:13.845597",
+      "updated_at": "2026-01-30T09:54:13.845598"
     }
   ]
 }

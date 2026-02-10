@@ -20,6 +20,9 @@ whitenoise==6.6.0
 # AI/ML
 openai==1.59.9
 
+# HTTP Requests (n8n integration)
+requests==2.31.0
+
 # Utilities
 python-dateutil==2.9.0
 pytz==2024.2

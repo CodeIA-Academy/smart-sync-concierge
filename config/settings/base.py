@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'apps.availability',
     'apps.traces',
     'apps.agents',
+    'apps.mcp_integration',
 ]
 
 # ============================================================================
@@ -345,3 +346,10 @@ SPECTACULAR_SETTINGS = {
         'defaultModelExpandDepth': 2,
     },
 }
+
+# ============================================================================
+# N8N INTEGRATION CONFIGURATION
+# ============================================================================
+
+# Importar configuración específica de n8n
+from .n8n import *  # noqa: F401, F403

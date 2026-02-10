@@ -12,14 +12,15 @@ class SmartSyncWorkflowBuilder:
     """
     Constructor del workflow Smart-Sync para n8n.
 
-    El workflow tiene 5 nodos:
+    El workflow tiene 6 nodos:
     1. Webhook Input: Recibe POST en /webhook/appointments/process
     2. Preparar Datos: Enriquece con metadata (Function node)
     3. HTTP Request (Django): POST a Django API /api/v1/appointments/
-    4. AI Agent: Usa Openrouter/Haiku para generar respuesta personalizada
-    5. Webhook Response: Devuelve respuesta al usuario
+    4. AI Agent: Nodo Langchain que genera respuesta con Haiku
+    5. OpenRouter LLM: Modelo Haiku 4.5 desde Openrouter
+    6. Webhook Response: Devuelve respuesta al usuario
 
-    El flujo es: [1] → [2] → [3] → [4] → [5]
+    El flujo es: [1] → [2] → [3] → [4] ← [5] → [6]
     """
 
     def __init__(self, django_api_url: str, django_api_token: str, openrouter_api_key: str = ""):
@@ -50,6 +51,7 @@ class SmartSyncWorkflowBuilder:
                 self._node_prepare_data(),
                 self._node_http_django(),
                 self._node_ai_agent(),
+                self._node_openrouter_llm(),
                 self._node_webhook_response()
             ],
             "connections": self._connections(),
@@ -150,13 +152,15 @@ return {
 
     def _node_ai_agent(self) -> Dict[str, Any]:
         """
-        Nodo 4: AI Agent Langchain con Openrouter/Haiku.
+        Nodo 4: AI Agent Langchain.
 
-        Genera respuesta personalizada al usuario usando modelo Haiku.
-        Usa el nodo AI Agent de Langchain que permite integrar con Openrouter.
+        Genera respuesta personalizada al usuario.
+        Conectado al modelo LLM de Openrouter.
         """
         return {
             "parameters": {
+                "agentType": "openAiFunctionsAgent",
+                "input": "={{$json.prompt}}",
                 "options": {}
             },
             "name": "AI Agent (Haiku)",
@@ -165,9 +169,29 @@ return {
             "position": [850, 300]
         }
 
+    def _node_openrouter_llm(self) -> Dict[str, Any]:
+        """
+        Nodo 5: OpenRouter Chat Model con Haiku 4.5.
+
+        Proporciona el modelo LLM para el AI Agent.
+        """
+        return {
+            "parameters": {
+                "model": "openrouter/openai/gpt-4.5-turbo",
+                "options": {
+                    "temperature": 0.7,
+                    "maxTokens": 300
+                }
+            },
+            "name": "OpenRouter Chat Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+            "typeVersion": 1,
+            "position": [850, 450]
+        }
+
     def _node_webhook_response(self) -> Dict[str, Any]:
         """
-        Nodo 5: Respuesta al usuario (Webhook Response).
+        Nodo 6: Respuesta al usuario (Webhook Response).
 
         Devuelve la respuesta procesada al cliente.
         """
@@ -188,7 +212,8 @@ return {
         """
         Define las conexiones entre nodos.
 
-        Flujo: [1] → [2] → [3] → [4] → [5]
+        Flujo: [1] → [2] → [3] → [4] ← [5] → [6]
+        El nodo 4 (AI Agent) está conectado al nodo 5 (LLM)
         """
         return {
             "Webhook Input": {
@@ -201,6 +226,8 @@ return {
                 "main": [[{"node": "AI Agent (Haiku)", "type": "main", "index": 0}]]
             },
             "AI Agent (Haiku)": {
-                "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]]
-            }
+                "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]],
+                "ai_languageModel": [[{"node": "OpenRouter Chat Model", "type": "main", "index": 0}]]
+            },
+            "OpenRouter Chat Model": {}
         }

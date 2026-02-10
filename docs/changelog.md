@@ -7,14 +7,82 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### En Progreso
+- Integración n8n: Setup automático de workflows (✅ Completado en v0.1.1)
+
 ### Planeado
+- Validación HMAC para webhooks n8n
+- Endpoint de diagnóstico `/api/v1/mcp/status/`
+- Tests unitarios para n8n integration
+- Soporte para múltiples workflows
+- Webhooks de n8n → Django (notificaciones)
+- Dashboard de monitoreo
 - Migración a base de datos PostgreSQL
 - Implementación de sistema de notificaciones (email, SMS)
 - Integración con calendarios externos (Google Calendar, Outlook)
 - Panel de analytics y reportes
-- API webhooks para integraciones de terceros
 - Multi-tenant para múltiples negocios
-- Integración con LLMs (Qwen, Claude, OpenAI)
+
+---
+
+## [0.1.1] - 2026-02-10
+
+### ✨ New Features
+
+#### n8n Integration (MCP App)
+- **Nueva app:** `apps/mcp_integration` para integración automática con n8n
+  - Cliente n8n API completo con métodos CRUD
+  - Constructor automático de workflows n8n
+  - Comando Django para setup en una línea
+  - Documentación completa de arquitectura
+
+#### Componentes Nuevos
+1. **N8NClient** (`apps/mcp_integration/services/n8n_client.py`)
+   - Autenticación via JWT con n8n API
+   - Métodos: create, activate, deactivate, list, delete, get_executions
+   - Búsqueda por nombre y validación de conexión
+   - Manejo robusto de errores HTTP
+
+2. **SmartSyncWorkflowBuilder** (`apps/mcp_integration/services/workflow_builder.py`)
+   - Generación automática de workflows JSON
+   - 5 nodos: Webhook Input → Preparar Datos → HTTP Request → Procesar → Webhook Response
+   - Enriquecimiento de metadata en tiempo real
+   - Flujo completamente configurable
+
+3. **setup_n8n_workflow Command** (`apps/mcp_integration/management/commands/`)
+   - Setup automático de workflow con validaciones
+   - Opciones: --django-url, --activate, --replace
+   - Feedback detallado y guía de testing
+   - Manejo de workflows existentes
+
+#### Configuración
+- Nuevo archivo: `config/settings/n8n.py`
+  - Variables de entorno para n8n API
+  - Configuración de webhook y seguridad
+  - Parámetros de workflow
+
+#### Documentación
+- **MCP_ARCHITECTURE.md**: Decisiones de arquitectura, diagramas completos, flujo de datos
+- **N8N_WORKFLOW_SETUP.md**: Guía paso a paso, troubleshooting, comandos útiles
+- **apps/mcp_integration/README.md**: Documentación de la app
+
+#### Dependencias
+- Agregado: `requests==2.31.0` para llamadas HTTP a n8n API
+
+### 🔄 Changed
+- Actualizado `config/settings/base.py`: Agregada app `apps.mcp_integration`
+- Importación de configuración n8n en base settings
+- Actualizado `.env.example` con variables de n8n
+
+### 📚 Documentation
+- Actualizado CLAUDE.md con instrucciones de integración
+- Documentación completa de arquitectura y decisiones
+- Guía de setup paso a paso para usuarios
+
+### 🧪 Testing
+- Comandos para testing local con curl
+- Instrucciones para testing con ngrok
+- Verificación de conectividad a n8n
 
 ---
 

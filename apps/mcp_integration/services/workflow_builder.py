@@ -85,17 +85,18 @@ class SmartSyncWorkflowBuilder:
         """
         Nodo 2: Preparar datos antes de enviar a Django.
 
-        Extrae el body del webhook y enriquece con metadata.
+        Extrae datos del webhook (puede venir en body o directamente en json).
         """
         function_code = '''\
-// Extraer datos del webhook
-const body = $input.item.json.body || {};
+// Extraer datos - puede venir en body o directamente en json
+const input = $input.item.json;
+const data = input.body || input;
 
 // Enriquecer con metadata
 return {
-  prompt: body.prompt || "",
-  user_timezone: body.user_timezone || "America/Mexico_City",
-  user_id: body.user_id || "anonymous",
+  prompt: data.prompt || "",
+  user_timezone: data.user_timezone || "America/Mexico_City",
+  user_id: data.user_id || "anonymous",
   metadata: {
     n8n_execution_id: $execution.id,
     timestamp: new Date().toISOString(),

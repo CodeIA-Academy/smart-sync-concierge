@@ -116,6 +116,8 @@ class AppointmentDetailSerializer(serializers.Serializer):
     )
     prompt_original = serializers.CharField(
         max_length=500,
+        required=False,
+        allow_blank=True,
         help_text="Original user prompt"
     )
     fecha = serializers.DateField(
@@ -141,10 +143,12 @@ class AppointmentDetailSerializer(serializers.Serializer):
         help_text="Timezone (IANA format)"
     )
     tipo = ServiceTypeSerializer(
+        required=False,
         help_text="Service type information"
     )
     participantes = ParticipantSerializer(
         many=True,
+        required=False,
         help_text="List of appointment participants"
     )
     ubicacion = LocationSerializer(

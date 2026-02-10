@@ -1,8 +1,8 @@
 {
   "metadata": {
     "version": "1.0.0",
-    "last_updated": "2026-01-28T08:00:03.093259",
-    "total_traces": 4,
+    "last_updated": "2026-02-10T21:01:37.929458",
+    "total_traces": 5,
     "description": "Storage for AI agent decision traces and observability in MVP (v0.2.0)"
   },
   "traces": [
@@ -379,6 +379,118 @@
       "final_output": {},
       "total_duration_ms": 35,
       "created_at": "2026-01-28T08:00:03.093256"
+    },
+    {
+      "trace_id": "trace_20260210_150137_d9635cd5",
+      "timestamp": "2026-02-10T15:01:37.851677",
+      "input_prompt": "cita mañana 10am con Dr. Pérez",
+      "user_timezone": "America/Mexico_City",
+      "user_id": "user_123",
+      "agents": [
+        {
+          "agent": "parsing",
+          "status": "warning",
+          "message": "Extracted entities but found 1 ambiguities",
+          "input": {},
+          "output": {
+            "contacto_nombre": "Pérez",
+            "fecha_raw": "mañana",
+            "hora_raw": "10:00",
+            "ubicacion": null,
+            "servicio": null,
+            "ambiguities": [
+              {
+                "field": "ubicacion",
+                "message": "No se especificó en qué ubicación",
+                "severity": "info"
+              }
+            ],
+            "raw_prompt": "cita mañana 10am con Dr. Pérez"
+          },
+          "duration_ms": 1,
+          "confidence": 1.0,
+          "errors": [],
+          "warnings": [
+            "ubicacion: No se especificó en qué ubicación"
+          ]
+        },
+        {
+          "agent": "temporal_reasoning",
+          "status": "success",
+          "message": "Successfully resolved temporal references",
+          "input": {},
+          "output": {
+            "fecha": "2026-02-11",
+            "hora_inicio": "10:00",
+            "hora_fin": "11:00",
+            "timezone": "America/Mexico_City",
+            "resolved_datetime": "2026-02-11T10:00:00"
+          },
+          "duration_ms": 42,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "geo_reasoning",
+          "status": "error",
+          "message": "No locations available for this contact",
+          "input": {},
+          "output": {},
+          "duration_ms": 0,
+          "confidence": 0.0,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "validation",
+          "status": "success",
+          "message": "All validations passed",
+          "input": {},
+          "output": {
+            "fecha": "2026-02-11",
+            "hora_inicio": "10:00",
+            "hora_fin": "11:00",
+            "contacto_id": "dr_juan_perez",
+            "contacto_nombre": "Pérez"
+          },
+          "duration_ms": 0,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        },
+        {
+          "agent": "availability",
+          "status": "success",
+          "message": "Appointment time is available",
+          "input": {},
+          "output": {
+            "available": true,
+            "reason": "Available",
+            "conflicts": [],
+            "slots_disponibles": []
+          },
+          "duration_ms": 16,
+          "confidence": 0.95,
+          "errors": [],
+          "warnings": []
+        }
+      ],
+      "final_status": "success",
+      "final_output": {
+        "contacto_id": "dr_juan_perez",
+        "contacto_nombre": "Pérez",
+        "fecha": "2026-02-11",
+        "hora_inicio": "10:00",
+        "hora_fin": "11:00",
+        "ubicacion_id": null,
+        "servicio_id": null,
+        "status": "confirmed",
+        "created_via_agent": true,
+        "trace_id": "trace_20260210_150137_d9635cd5"
+      },
+      "total_duration_ms": 70,
+      "created_at": "2026-02-10T21:01:37.929453"
     }
   ]
 }

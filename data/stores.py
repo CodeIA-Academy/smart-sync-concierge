@@ -422,7 +422,11 @@ class ServiceStore(BaseStore):
         if 'id' not in service_data:
             service_data['id'] = self._generate_id('service')
 
-        service = Service.objects.create(**service_data)
+        # Filter only fields that exist in the Service model
+        model_fields = {'id', 'nombre', 'categoria', 'descripcion', 'duracion_minutos', 'activo'}
+        filtered_data = {k: v for k, v in service_data.items() if k in model_fields}
+
+        service = Service.objects.create(**filtered_data)
         return self._model_to_dict(service)
 
     def update(self, service_id: str, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -431,8 +435,11 @@ class ServiceStore(BaseStore):
 
         try:
             service = Service.objects.get(id=service_id)
+            # Filter only fields that exist in the Service model
+            model_fields = {'nombre', 'categoria', 'descripcion', 'duracion_minutos', 'activo'}
             for key, value in update_data.items():
-                setattr(service, key, value)
+                if key in model_fields:
+                    setattr(service, key, value)
             service.save()
             return self._model_to_dict(service)
         except Service.DoesNotExist:

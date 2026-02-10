@@ -2,7 +2,7 @@
 Constructor de workflows n8n para Smart-Sync Concierge.
 Genera el JSON completo del workflow de forma programática.
 """
-from typing import Dict, Any
+from typing import Dict, Any, List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,13 +12,13 @@ class SmartSyncWorkflowBuilder:
     """
     Constructor del workflow Smart-Sync para n8n.
 
-    El workflow tiene 6 nodos:
+    El workflow tiene 6 nodos profesionales:
     1. Webhook Input: Recibe POST en /webhook/appointments/process
     2. Preparar Datos: Enriquece con metadata (Function node)
-    3. HTTP Request (Django): POST a Django API /api/v1/appointments/
-    4. AI Agent: Nodo Langchain que genera respuesta con Haiku
-    5. OpenRouter LLM: Modelo Haiku 4.5 desde Openrouter
-    6. Webhook Response: Devuelve respuesta al usuario
+    3. HTTP Request a Django: Procesa la cita
+    4. AI Agent: Genera respuesta personalizada con IA
+    5. OpenRouter LLM: Modelo Haiku 4.5
+    6. Webhook Response: Retorna respuesta al cliente
 
     El flujo es: [1] → [2] → [3] → [4] ← [5] → [6]
     """
@@ -30,7 +30,7 @@ class SmartSyncWorkflowBuilder:
         Args:
             django_api_url: URL pública de Django API
             django_api_token: Token de autenticación Django
-            openrouter_api_key: API key de Openrouter (opcional)
+            openrouter_api_key: API key de Openrouter
         """
         self.django_api_url = django_api_url.rstrip('/')
         self.django_api_token = django_api_token
@@ -39,7 +39,7 @@ class SmartSyncWorkflowBuilder:
 
     def build(self) -> Dict[str, Any]:
         """
-        Construye el JSON completo del workflow.
+        Construye el JSON completo del workflow profesional.
 
         Returns:
             Dict con estructura completa del workflow n8n
@@ -62,7 +62,7 @@ class SmartSyncWorkflowBuilder:
 
     def _node_webhook_input(self) -> Dict[str, Any]:
         """
-        Nodo 1: Webhook que recibe la solicitud POST.
+        Nodo 1: Webhook que recibe POST desde Postman/cliente.
 
         Escucha en: /webhook/appointments/process
         Acepta: POST con JSON { prompt, user_timezone, user_id }
@@ -83,27 +83,22 @@ class SmartSyncWorkflowBuilder:
 
     def _node_prepare_data(self) -> Dict[str, Any]:
         """
-        Nodo 2: Preparar datos antes de enviar a Django.
+        Nodo 2: Preparar datos para procesar.
 
-        Extrae datos del webhook (puede venir en body o directamente en json).
+        Extrae y enriquece con metadata.
         """
-        function_code = '''\
-// Extraer datos - puede venir en body o directamente en json
-const input = $input.item.json;
+        function_code = '''const input = $input.item.json;
 const data = input.body || input;
-
-// Enriquecer con metadata
 return {
   prompt: data.prompt || "",
-  user_timezone: data.user_timezone || "America/Mexico_City",
+  user_timezone: data.user_timezone || "Europe/Madrid",
   user_id: data.user_id || "anonymous",
   metadata: {
     n8n_execution_id: $execution.id,
     timestamp: new Date().toISOString(),
     source: "n8n_webhook"
   }
-};
-        '''.strip()
+};'''
 
         return {
             "parameters": {
@@ -119,7 +114,7 @@ return {
         """
         Nodo 3: HTTP Request a Django API.
 
-        Procesa la cita y obtiene datos estructurados.
+        Procesa la cita en Django y retorna datos estructurados.
         """
         return {
             "parameters": {
@@ -131,6 +126,10 @@ return {
                         {
                             "name": "Authorization",
                             "value": f"Token {self.django_api_token}"
+                        },
+                        {
+                            "name": "Content-Type",
+                            "value": "application/json"
                         }
                     ]
                 },
@@ -153,22 +152,25 @@ return {
 
     def _node_ai_agent(self) -> Dict[str, Any]:
         """
-        Nodo 4: AI Agent Langchain.
+        Nodo 4: AI Agent que genera respuesta personalizada.
 
-        Genera respuesta personalizada al usuario.
-        Conectado al modelo LLM de Openrouter.
+        Usa el modelo LLM de OpenRouter (Haiku 4.5).
         """
         return {
             "parameters": {
                 "agentType": "openAiFunctionsAgent",
                 "input": "={{$json.prompt}}",
+                "tools": [],
                 "model": {
                     "value": {
                         "__rl": True,
-                        "value": "OpenRouter Chat Model"
+                        "value": "OpenRouter Chat Model",
+                        "resource": "openRouterModel"
                     }
                 },
-                "options": {}
+                "options": {
+                    "maxIterations": 10
+                }
             },
             "name": "AI Agent (Haiku)",
             "type": "@n8n/n8n-nodes-langchain.agent",
@@ -180,11 +182,11 @@ return {
         """
         Nodo 5: OpenRouter Chat Model con Haiku 4.5.
 
-        Proporciona el modelo LLM para el AI Agent.
+        Proporciona el LLM al AI Agent.
         """
         return {
             "parameters": {
-                "model": "openrouter/openai/gpt-4.5-turbo",
+                "model": "openrouter/anthropic/claude-haiku-4.5:beta",
                 "options": {
                     "temperature": 0.7,
                     "maxTokens": 300
@@ -193,14 +195,20 @@ return {
             "name": "OpenRouter Chat Model",
             "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
             "typeVersion": 1,
-            "position": [850, 450]
+            "position": [850, 450],
+            "credentials": {
+                "openRouterApi": {
+                    "id": "openRouterApi",
+                    "name": "OpenRouter API"
+                }
+            }
         }
 
     def _node_webhook_response(self) -> Dict[str, Any]:
         """
-        Nodo 6: Respuesta al usuario (Webhook Response).
+        Nodo 6: Webhook Response que retorna al cliente.
 
-        Devuelve la respuesta procesada al cliente.
+        Devuelve la respuesta del AI Agent en JSON.
         """
         return {
             "parameters": {
@@ -219,8 +227,8 @@ return {
         """
         Define las conexiones entre nodos.
 
-        Flujo: [1] → [2] → [3] → [4] → [6]
-        El nodo 5 (OpenRouter LLM) está conectado al nodo 4 (AI Agent) como modelo
+        Flujo principal: [1] → [2] → [3] → [4] → [6]
+        El nodo 5 (OpenRouter LLM) está conectado al nodo 4 (AI Agent)
         """
         return {
             "Webhook Input": {

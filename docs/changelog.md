@@ -9,6 +9,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ### En Progreso
 - Integración n8n: Setup automático de workflows (✅ Completado en v0.1.1)
+- Actualización de nodos n8n workflow (✅ Completado - 10/02/2026)
 
 ### Planeado
 - Validación HMAC para webhooks n8n
@@ -22,6 +23,35 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - Integración con calendarios externos (Google Calendar, Outlook)
 - Panel de analytics y reportes
 - Multi-tenant para múltiples negocios
+
+---
+
+## [0.1.2] - 2026-02-10
+
+### 🔧 Bug Fixes
+
+#### n8n Workflow - Node "Generar Respuesta" Fix
+- **Fixed:** Node "Generar Respuesta" (ID: 27404633-cf26-462b-8e8b-85b30567a0ca) was referencing fields at the root level that were actually nested inside the `appointment` object
+- **Issue:** The node was attempting to access `doctor_name` and `appointment_datetime` directly from `$input.item.json`, but these fields are located within `data.appointment`
+- **Solution:** Updated functionCode to properly extract and reference nested appointment object:
+  ```javascript
+  const data = $input.item.json;
+  return {
+    status: "success",
+    message: "Cita confirmada exitosamente",
+    appointment: data.appointment,
+    confirmation_message: `Tu cita con ${data.appointment.doctor_name} ha sido confirmada para ${data.appointment.appointment_datetime}`
+  };
+  ```
+- **Method:** API PUT request via n8n REST API (authenticated with X-N8N-API-KEY)
+- **Verification:** Updated node confirmed via GET workflow request
+- **Workflow ID:** bLmWJ1oeHFjyt1t7
+- **Status:** ✅ Deployed successfully to n8n.codeia.dev
+
+### 📋 Impacted Components
+- n8n workflow: Smart-Sync Concierge - Appointments
+- Node chain: Enriquecer Respuesta → Generar Respuesta (final output node)
+- API endpoint: POST /appointments/process (webhook)
 
 ---
 

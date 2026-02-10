@@ -161,6 +161,12 @@ return {
             "parameters": {
                 "agentType": "openAiFunctionsAgent",
                 "input": "={{$json.prompt}}",
+                "model": {
+                    "value": {
+                        "__rl": True,
+                        "value": "OpenRouter Chat Model"
+                    }
+                },
                 "options": {}
             },
             "name": "AI Agent (Haiku)",
@@ -212,8 +218,8 @@ return {
         """
         Define las conexiones entre nodos.
 
-        Flujo: [1] → [2] → [3] → [4] ← [5] → [6]
-        El nodo 4 (AI Agent) está conectado al nodo 5 (LLM)
+        Flujo: [1] → [2] → [3] → [4] → [6]
+        El nodo 5 (OpenRouter LLM) está conectado al nodo 4 (AI Agent) como modelo
         """
         return {
             "Webhook Input": {
@@ -226,8 +232,7 @@ return {
                 "main": [[{"node": "AI Agent (Haiku)", "type": "main", "index": 0}]]
             },
             "AI Agent (Haiku)": {
-                "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]],
-                "ai_languageModel": [[{"node": "OpenRouter Chat Model", "type": "main", "index": 0}]]
+                "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]]
             },
             "OpenRouter Chat Model": {}
         }

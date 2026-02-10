@@ -1,8 +1,8 @@
 {
   "metadata": {
     "version": "1.0.0",
-    "last_updated": "2026-02-10T21:03:29.460012",
-    "total_appointments": 5,
+    "last_updated": "2026-02-10T22:29:47.176523",
+    "total_appointments": 8,
     "description": "Storage for appointment data in MVP (v0.1.0)"
   },
   "appointments": [
@@ -119,6 +119,51 @@
       "id": "apt_20260211_4d184a39",
       "created_at": "2026-02-10T21:03:29.460010",
       "updated_at": "2026-02-10T21:03:29.460011"
+    },
+    {
+      "contacto_id": "dr_juan_perez",
+      "contacto_nombre": "Pérez",
+      "fecha": "2026-02-11",
+      "hora_inicio": "10:00",
+      "hora_fin": "11:00",
+      "ubicacion_id": null,
+      "servicio_id": null,
+      "status": "confirmed",
+      "created_via_agent": true,
+      "trace_id": "trace_20260210_162850_f0065804",
+      "id": "apt_20260211_7e499555",
+      "created_at": "2026-02-10T22:28:50.365228",
+      "updated_at": "2026-02-10T22:28:50.365229"
+    },
+    {
+      "contacto_id": "dr_juan_perez",
+      "contacto_nombre": "Pérez",
+      "fecha": "2026-02-11",
+      "hora_inicio": "10:00",
+      "hora_fin": "11:00",
+      "ubicacion_id": null,
+      "servicio_id": null,
+      "status": "confirmed",
+      "created_via_agent": true,
+      "trace_id": "trace_20260210_162945_87f344bc",
+      "id": "apt_20260211_0a576202",
+      "created_at": "2026-02-10T22:29:45.803061",
+      "updated_at": "2026-02-10T22:29:45.803062"
+    },
+    {
+      "contacto_id": "dr_juan_perez",
+      "contacto_nombre": "Pérez",
+      "fecha": "2026-02-11",
+      "hora_inicio": "10:00",
+      "hora_fin": "11:00",
+      "ubicacion_id": null,
+      "servicio_id": null,
+      "status": "confirmed",
+      "created_via_agent": true,
+      "trace_id": "trace_20260210_162947_686df604",
+      "id": "apt_20260211_9530cadd",
+      "created_at": "2026-02-10T22:29:47.176514",
+      "updated_at": "2026-02-10T22:29:47.176518"
     }
   ]
 }

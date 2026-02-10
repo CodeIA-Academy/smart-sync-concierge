@@ -150,27 +150,18 @@ return {
 
     def _node_ai_agent(self) -> Dict[str, Any]:
         """
-        Nodo 4: AI Agent con Openrouter/Haiku.
+        Nodo 4: AI Agent Langchain con Openrouter/Haiku.
 
         Genera respuesta personalizada al usuario usando modelo Haiku.
-        El provider de credencial debe ser Openrouter configurado en n8n.
+        Usa el nodo AI Agent de Langchain que permite integrar con Openrouter.
         """
         return {
             "parameters": {
-                "model": "openrouter/openai/gpt-4.5-turbo",
-                "messages": [
-                    {
-                        "message": "Eres un asistente de conserje amable y profesional. El usuario solicitó: {{$json.prompt}}\n\nLa cita fue {{$json.status === 'success' ? 'creada exitosamente' : 'no se pudo crear'}}.\n\n{{$json.data ? 'Detalles: ' + JSON.stringify($json.data) : ''}}\n\nResponde de forma amable y personalizada en 1-2 párrafos máximo."
-                    }
-                ],
-                "options": {
-                    "temperature": 0.7,
-                    "maxTokens": 300
-                }
+                "options": {}
             },
             "name": "AI Agent (Haiku)",
-            "type": "n8n-nodes-base.openAi",
-            "typeVersion": 3,
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 3.1,
             "position": [850, 300]
         }
 

@@ -59,50 +59,42 @@ class ContactDetailSerializer(serializers.Serializer):
     """Complete contact serializer for read operations."""
 
     id = serializers.CharField(
-        validators=[validate_contact_id],
-        help_text="Unique contact ID (contact_xxxxx)"
+        help_text="Unique contact ID"
     )
     nombre = serializers.CharField(
-        max_length=100,
-        min_length=2,
+        max_length=255,
         help_text="Full name"
     )
-    tipo = serializers.ChoiceField(
-        choices=CONTACT_TYPE_CHOICES,
-        help_text="Contact type: doctor, staff, or resource"
-    )
-    especialidad = serializers.CharField(
+    titulo = serializers.CharField(
         required=False,
-        max_length=100,
-        help_text="Specialty (for doctors)"
+        allow_blank=True,
+        help_text="Title or specialty"
+    )
+    tipo = serializers.ChoiceField(
+        choices=['prestador', 'staff', 'resource'],
+        help_text="Contact type: prestador, staff, or resource"
     )
     email = serializers.EmailField(
         required=False,
-        validators=[validate_email]
+        allow_blank=True
     )
     telefono = serializers.CharField(
         required=False,
-        validators=[validate_phone_e164],
-        help_text="Phone in E.164 format (+525512345678)"
+        allow_blank=True,
+        help_text="Phone number"
     )
-    categoria = serializers.CharField(
+    especialidades = serializers.ListField(
         required=False,
-        max_length=100,
-        help_text="Category (for resources)"
+        help_text="List of specialties"
     )
     activo = serializers.BooleanField(
         default=True,
         help_text="Whether the contact is active"
     )
-    ubicaciones = LocationSerializer(
-        many=True,
-        help_text="Locations where contact is available"
-    )
     created_at = serializers.DateTimeField(
         help_text="Creation timestamp"
     )
     updated_at = serializers.DateTimeField(
-        required=False,
         help_text="Last update timestamp"
     )
 
@@ -111,31 +103,31 @@ class ContactCreateUpdateSerializer(serializers.Serializer):
     """Serializer for creating/updating contacts."""
 
     nombre = serializers.CharField(
-        max_length=100,
+        max_length=255,
         min_length=2
     )
     tipo = serializers.ChoiceField(
-        choices=CONTACT_TYPE_CHOICES
+        choices=['prestador', 'staff', 'resource']
     )
-    especialidad = serializers.CharField(
+    titulo = serializers.CharField(
         required=False,
         allow_blank=True
     )
     email = serializers.EmailField(required=False)
     telefono = serializers.CharField(
         required=False,
-        validators=[validate_phone_e164]
-    )
-    categoria = serializers.CharField(
-        required=False,
         allow_blank=True
     )
+    especialidades = serializers.ListField(
+        required=False,
+        child=serializers.CharField(),
+        allow_empty=True
+    )
     activo = serializers.BooleanField(default=True)
-    ubicaciones = LocationSerializer(many=True)
 
     def validate_tipo(self, value):
         """Ensure type is one of the valid choices."""
-        valid_types = ['doctor', 'staff', 'resource']
+        valid_types = ['prestador', 'staff', 'resource']
         if value not in valid_types:
             raise serializers.ValidationError(
                 f"Tipo debe ser uno de: {', '.join(valid_types)}"

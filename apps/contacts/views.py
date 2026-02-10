@@ -42,6 +42,7 @@ class ContactViewSet(viewsets.ViewSet):
 
     permission_classes = [IsAuthenticated]
     pagination_class = ContactPagination
+    lookup_field = 'pk'  # Use 'pk' for string-based primary key matching
 
     def get_serializer(self, *args, **kwargs):
         """Dynamically select serializer based on action."""

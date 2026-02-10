@@ -264,59 +264,68 @@ class AppointmentStore(BaseStore):
 
 
 class ContactStore(BaseStore):
-    """Store for contact (doctor/staff/resource) data."""
+    """Store for contact (doctor/staff/resource) data using Django ORM."""
 
     def __init__(self):
-        super().__init__('contacts.json')
+        # Don't call parent __init__ since we're using Django ORM
+        self.file_path = None
 
     def list_all(self) -> List[Dict[str, Any]]:
         """Get all contacts."""
-        data = self._read_data()
-        return data.get('contacts', [])
+        from apps.contacts.models import Contact
+
+        contacts = Contact.objects.all()
+        return [self._model_to_dict(contact) for contact in contacts]
 
     def get_by_id(self, contact_id: str) -> Optional[Dict[str, Any]]:
         """Get contact by ID."""
-        contacts = self.list_all()
-        for contact in contacts:
-            if contact.get('id') == contact_id:
-                return contact
-        return None
+        from apps.contacts.models import Contact
+
+        try:
+            contact = Contact.objects.get(id=contact_id)
+            return self._model_to_dict(contact)
+        except Contact.DoesNotExist:
+            return None
 
     def create(self, contact_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new contact."""
-        data = self._read_data()
-        contacts = data.get('contacts', [])
+        from apps.contacts.models import Contact
 
-        contact_id = self._generate_id('contact')
-        contact = {
-            **contact_data,
-            'id': contact_id,
-            'created_at': datetime.utcnow().isoformat(),
-            'updated_at': datetime.utcnow().isoformat(),
-        }
+        # Generate ID if not provided
+        if 'id' not in contact_data or not contact_data['id']:
+            contact_data['id'] = self._generate_id('cont')
 
-        contacts.append(contact)
-        data['contacts'] = contacts
-        self._update_metadata(data, 'total_contacts', len(contacts))
-        self._write_data(data)
-
-        return contact
+        contact = Contact.objects.create(**contact_data)
+        return self._model_to_dict(contact)
 
     def update(self, contact_id: str, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Update existing contact."""
-        data = self._read_data()
-        contacts = data.get('contacts', [])
+        from apps.contacts.models import Contact
 
-        for i, contact in enumerate(contacts):
-            if contact.get('id') == contact_id:
-                contact.update(update_data)
-                contact['updated_at'] = datetime.utcnow().isoformat()
-                contacts[i] = contact
-                data['contacts'] = contacts
-                self._write_data(data)
-                return contact
+        try:
+            contact = Contact.objects.get(id=contact_id)
+            for key, value in update_data.items():
+                setattr(contact, key, value)
+            contact.save()
+            return self._model_to_dict(contact)
+        except Contact.DoesNotExist:
+            return None
 
-        return None
+    @staticmethod
+    def _model_to_dict(contact) -> Dict[str, Any]:
+        """Convert Django Contact model to dictionary."""
+        return {
+            'id': contact.id,
+            'nombre': contact.nombre,
+            'titulo': contact.titulo,
+            'email': contact.email,
+            'telefono': contact.telefono,
+            'tipo': contact.tipo,
+            'especialidades': contact.especialidades,
+            'activo': contact.activo,
+            'created_at': contact.created_at.isoformat(),
+            'updated_at': contact.updated_at.isoformat(),
+        }
 
     def check_availability(
         self,
@@ -382,59 +391,66 @@ class ContactStore(BaseStore):
 
 
 class ServiceStore(BaseStore):
-    """Store for service/appointment-type catalog data."""
+    """Store for service/appointment-type catalog data using Django ORM."""
 
     def __init__(self):
-        super().__init__('services.json')
+        # Don't call parent __init__ since we're using Django ORM
+        self.file_path = None
 
     def list_all(self) -> List[Dict[str, Any]]:
         """Get all services."""
-        data = self._read_data()
-        return data.get('services', [])
+        from apps.services.models import Service
+
+        services = Service.objects.all()
+        return [self._model_to_dict(service) for service in services]
 
     def get_by_id(self, service_id: str) -> Optional[Dict[str, Any]]:
         """Get service by ID."""
-        services = self.list_all()
-        for service in services:
-            if service.get('id') == service_id:
-                return service
-        return None
+        from apps.services.models import Service
+
+        try:
+            service = Service.objects.get(id=service_id)
+            return self._model_to_dict(service)
+        except Service.DoesNotExist:
+            return None
 
     def create(self, service_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new service."""
-        data = self._read_data()
-        services = data.get('services', [])
+        from apps.services.models import Service
 
-        service_id = self._generate_id('service')
-        service = {
-            **service_data,
-            'id': service_id,
-            'created_at': datetime.utcnow().isoformat(),
-            'updated_at': datetime.utcnow().isoformat(),
-        }
+        # If no ID provided, generate one
+        if 'id' not in service_data:
+            service_data['id'] = self._generate_id('service')
 
-        services.append(service)
-        data['services'] = services
-        self._update_metadata(data, 'total_services', len(services))
-        self._write_data(data)
-
-        return service
+        service = Service.objects.create(**service_data)
+        return self._model_to_dict(service)
 
     def update(self, service_id: str, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Update existing service."""
-        data = self._read_data()
-        services = data.get('services', [])
+        from apps.services.models import Service
 
-        for i, service in enumerate(services):
-            if service.get('id') == service_id:
-                service.update(update_data)
-                service['updated_at'] = datetime.utcnow().isoformat()
-                services[i] = service
-                data['services'] = services
-                self._write_data(data)
-                return service
+        try:
+            service = Service.objects.get(id=service_id)
+            for key, value in update_data.items():
+                setattr(service, key, value)
+            service.save()
+            return self._model_to_dict(service)
+        except Service.DoesNotExist:
+            return None
 
-        return None
+    @staticmethod
+    def _model_to_dict(service) -> Dict[str, Any]:
+        """Convert Django Service model to dictionary."""
+        return {
+            'id': service.id,
+            'nombre': service.nombre,
+            'categoria': service.categoria,
+            'descripcion': service.descripcion,
+            'duracion_minutos': service.duracion_minutos,
+            'activo': service.activo,
+            'created_at': service.created_at.isoformat(),
+            'updated_at': service.updated_at.isoformat(),
+        }
 
 
 class TraceStore(BaseStore):

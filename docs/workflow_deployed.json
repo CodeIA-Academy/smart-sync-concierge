@@ -1,0 +1,9 @@
+{
+  "status": "success",
+  "workflow_id": "h4Mq0RkLf9JiEqKE",
+  "action": "creado",
+  "webhook_url": "https://n8n.codeia.dev/webhook/default/h4Mq0RkLf9JiEqKE/appointments/process",
+  "n8n_url": "https://n8n.codeia.dev/workflow/h4Mq0RkLf9JiEqKE",
+  "nodes": 6,
+  "active": false
+}

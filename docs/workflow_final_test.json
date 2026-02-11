@@ -1,0 +1,78 @@
+{
+  "name": "Smart-Sync Test - Simple Response (No Deps)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smartsync-prod/test-response",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "smartsync_test_response"
+    },
+    {
+      "parameters": {
+        "functionCode": "const input = $input.item.json;\nconst data = input.body || input;\n\nconst appointment = {\n  prompt: data.prompt || \"Sin especificar\",\n  timezone: data.user_timezone || \"Europe/Madrid\",\n  user_id: data.user_id || \"anonymous\",\n  created_at: new Date().toISOString(),\n  status: \"pendiente_confirmacion\"\n};\n\nconst response_message = `\nSolicitud de Cita Recibida\n==========================\n\nDetalles:\n- Solicitud: ${appointment.prompt}\n- Zona Horaria: ${appointment.timezone}\n- Usuario ID: ${appointment.user_id}\n- Fecha: ${appointment.created_at}\n- Estado: ${appointment.status}\n\nPronto recibirás confirmación de tu cita.\n`;\n\nreturn {\n  appointment: appointment,\n  message: response_message,\n  notification_needed: true\n};"
+      },
+      "name": "Generar Respuesta",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "statusCode": 200,
+        "options": {}
+      },
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "Generar Respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar Respuesta": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Response": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {}
+}

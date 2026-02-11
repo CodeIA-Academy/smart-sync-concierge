@@ -1,0 +1,7 @@
+{
+  "workflow_id": "GfAyPHecDvmrmUZN",
+  "webhook_path": "smartsync-prod/test-response",
+  "webhook_url": "https://n8n.codeia.dev/webhook/smartsync-prod/test-response",
+  "n8n_url": "https://n8n.codeia.dev/workflow/GfAyPHecDvmrmUZN",
+  "active": true
+}

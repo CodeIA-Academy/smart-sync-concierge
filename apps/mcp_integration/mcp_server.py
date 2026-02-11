@@ -161,6 +161,57 @@ class N8NMCP:
         except:
             return False
 
+    def get_available_nodes(self, keyword: str = "") -> List[Dict[str, Any]]:
+        """Obtener nodos disponibles en n8n"""
+        try:
+            # Intentar varios endpoints
+            endpoints = [
+                "/api/v1/node-types",
+                "/types/nodes.json",
+                "/rest/node-types",
+            ]
+
+            for endpoint in endpoints:
+                try:
+                    resp = requests.get(
+                        f"{self.api_url}{endpoint}",
+                        headers=self.headers,
+                        timeout=10
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if isinstance(data, list):
+                            if keyword:
+                                return [n for n in data if keyword.lower() in str(n).lower()]
+                            return data
+                except:
+                    continue
+
+            # Si no funciona la API, devolver lista conocida de nodos comunes
+            return self._get_common_nodes(keyword)
+        except Exception as e:
+            logger.error(f"Error obteniendo nodos: {e}")
+            return self._get_common_nodes(keyword)
+
+    def _get_common_nodes(self, keyword: str = "") -> List[Dict[str, Any]]:
+        """Lista de nodos comunes en n8n (fallback)"""
+        common_nodes = [
+            {"name": "Webhook", "type": "n8n-nodes-base.webhook", "description": "Webhook para recibir datos"},
+            {"name": "Function", "type": "n8n-nodes-base.function", "description": "Ejecutar código JavaScript"},
+            {"name": "HTTP Request", "type": "n8n-nodes-base.httpRequest", "description": "Hacer peticiones HTTP"},
+            {"name": "Gmail", "type": "n8n-nodes-base.gmail", "description": "Enviar emails con Gmail"},
+            {"name": "Slack", "type": "n8n-nodes-base.slack", "description": "Enviar mensajes a Slack"},
+            {"name": "Discord", "type": "n8n-nodes-base.discord", "description": "Enviar mensajes a Discord"},
+            {"name": "Respond to Webhook", "type": "n8n-nodes-base.respondToWebhook", "description": "Responder al webhook"},
+            {"name": "Set", "type": "n8n-nodes-base.set", "description": "Establecer variables"},
+            {"name": "Merge", "type": "n8n-nodes-base.merge", "description": "Combinar datos"},
+            {"name": "Split In Batches", "type": "n8n-nodes-base.splitInBatches", "description": "Dividir en lotes"},
+        ]
+
+        if keyword:
+            return [n for n in common_nodes if keyword.lower() in n["name"].lower()]
+        return common_nodes
+
 
 # Funciones públicas para MCP
 def create_and_deploy_workflow(

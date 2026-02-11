@@ -1,8 +1,8 @@
 {
   "metadata": {
     "version": "1.0.0",
-    "last_updated": "2026-02-10T22:29:47.176523",
-    "total_appointments": 8,
+    "last_updated": "2026-02-10T23:26:37.029076",
+    "total_appointments": 9,
     "description": "Storage for appointment data in MVP (v0.1.0)"
   },
   "appointments": [
@@ -164,6 +164,21 @@
       "id": "apt_20260211_9530cadd",
       "created_at": "2026-02-10T22:29:47.176514",
       "updated_at": "2026-02-10T22:29:47.176518"
+    },
+    {
+      "contacto_id": "dr_juan_perez",
+      "contacto_nombre": "Pérez",
+      "fecha": "2026-02-11",
+      "hora_inicio": "10:00",
+      "hora_fin": "11:00",
+      "ubicacion_id": null,
+      "servicio_id": null,
+      "status": "confirmed",
+      "created_via_agent": true,
+      "trace_id": "trace_20260210_172637_86516bde",
+      "id": "apt_20260211_e19d9ab4",
+      "created_at": "2026-02-10T23:26:37.029073",
+      "updated_at": "2026-02-10T23:26:37.029074"
     }
   ]
 }

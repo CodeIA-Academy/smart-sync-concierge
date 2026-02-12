@@ -250,10 +250,11 @@ return {
         """
         Construye un workflow SIMPLE para pruebas sin IA Agent.
 
-        Solo 3 nodos:
+        4 nodos:
         1. Webhook Input: Recibe solicitud
         2. Generar Respuesta: Function node que procesa los datos
         3. Gmail: Envía respuesta por email
+        4. Webhook Response: Devuelve respuesta al cliente
 
         Este workflow es para testear el flujo básico sin AI Agent.
         """
@@ -262,9 +263,10 @@ return {
             "nodes": [
                 self._node_webhook_input(path=webhook_path, webhook_id=webhook_id),
                 self._node_generate_response_simple(),
-                self._node_send_email()
+                self._node_send_email(),
+                self._node_webhook_response_only()
             ],
-            "connections": self._connections_simple(),
+            "connections": self._connections_simple_with_response(),
             "settings": {}
         }
         logger.info(f"Workflow de prueba construido con {len(workflow['nodes'])} nodos")
@@ -327,7 +329,7 @@ return {
             "parameters": {
                 "toEmail": "yosnap@gmail.com",
                 "subject": "Solicitud de Cita Recibida - Smart-Sync",
-                "textPlain": "={{$json.message}}",
+                "message": "={{$json.message}}",
                 "options": {}
             },
             "name": "Enviar por Email",
@@ -344,7 +346,7 @@ return {
 
     def _connections_simple(self) -> Dict[str, Any]:
         """
-        Conexiones para workflow simple (sin IA Agent).
+        Conexiones para workflow simple (sin IA Agent, sin respuesta HTTP).
 
         Flujo: [1] Webhook → [2] Generar Respuesta → [3] Gmail
         """
@@ -356,6 +358,27 @@ return {
                 "main": [[{"node": "Enviar por Email", "type": "main", "index": 0}]]
             },
             "Enviar por Email": {
+                "main": [[]]
+            }
+        }
+
+    def _connections_simple_with_response(self) -> Dict[str, Any]:
+        """
+        Conexiones para workflow con Gmail y respuesta HTTP.
+
+        Flujo: [1] Webhook → [2] Generar Respuesta → [3] Gmail → [4] Webhook Response
+        """
+        return {
+            "Webhook Input": {
+                "main": [[{"node": "Generar Respuesta", "type": "main", "index": 0}]]
+            },
+            "Generar Respuesta": {
+                "main": [[{"node": "Enviar por Email", "type": "main", "index": 0}]]
+            },
+            "Enviar por Email": {
+                "main": [[{"node": "Webhook Response", "type": "main", "index": 0}]]
+            },
+            "Webhook Response": {
                 "main": [[]]
             }
         }

@@ -1,0 +1,435 @@
+{
+  "updatedAt": "2026-02-12T11:30:34.394Z",
+  "createdAt": "2026-02-11T13:52:58.574Z",
+  "id": "BkmU9DTalYI0OVml",
+  "name": "Smart-Sync Concierge - AI Agent",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smartsync-prod/cita-email",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        256,
+        304
+      ],
+      "webhookId": "smartsync_cita_email_webhook",
+      "id": "73e46a5d-31f3-4fff-ae07-02c373a901c6"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.prompt }}",
+        "options": {
+          "systemMessage": "Eres el asistente de Smart-Sync Concierge, un sistema de gestión de citas médicas.\n\nCuando recibas una solicitud de cita, extrae la información y responde SIEMPRE en JSON válido:\n{\n  \"appointment\": {\n    \"doctor\": \"nombre del doctor\",\n    \"date\": \"fecha solicitada\",\n    \"time\": \"hora solicitada\",\n    \"reason\": \"motivo\",\n    \"urgency\": \"normal o urgente\",\n    \"status\": \"pendiente_confirmacion\"\n  },\n  \"message\": \"Mensaje amigable confirmando la solicitud\",\n  \"email_html\": \"<html con estilos inline del email>\"\n}\n\nPara email_html genera un email HTML profesional con estilos inline. Usa esta plantilla base adaptándola al contenido:\n\n<div style=\"font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;\">\n  <div style=\"background:linear-gradient(135deg,#1a73e8,#0d47a1);padding:30px;text-align:center;border-radius:8px 8px 0 0;\">\n    <h1 style=\"color:#ffffff;margin:0;font-size:22px;\">Smart-Sync Concierge</h1>\n    <p style=\"color:#bbdefb;margin:8px 0 0;font-size:14px;\">Sistema de Gestión de Citas</p>\n  </div>\n  <div style=\"padding:30px;border:1px solid #e0e0e0;border-top:none;\">\n    <p style=\"color:#333;font-size:15px;line-height:1.6;\">Estimado paciente,</p>\n    <p style=\"color:#333;font-size:15px;line-height:1.6;\">Confirmamos la recepción de tu solicitud:</p>\n    <div style=\"background:#f5f7fa;border-left:4px solid #1a73e8;padding:20px;margin:20px 0;border-radius:0 8px 8px 0;\">\n      <table style=\"width:100%;border-collapse:collapse;\">\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;width:130px;\">Doctor</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">DOCTOR_NAME</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Fecha</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">DATE</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Hora</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">TIME</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Motivo</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">REASON</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Prioridad</td><td style=\"padding:8px 0;font-size:14px;\"><span style=\"background:URGENCY_COLOR;color:#fff;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;\">URGENCY</span></td></tr>\n      </table>\n    </div>\n    <p style=\"color:#333;font-size:15px;line-height:1.6;\">CONFIRMATION_MESSAGE</p>\n    <div style=\"text-align:center;margin:25px 0;\">\n      <a href=\"#\" style=\"background:#1a73e8;color:#ffffff;padding:12px 30px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;display:inline-block;\">Ver mi cita</a>\n    </div>\n  </div>\n  <div style=\"background:#f5f7fa;padding:20px;text-align:center;border-radius:0 0 8px 8px;border:1px solid #e0e0e0;border-top:none;\">\n    <p style=\"color:#999;font-size:12px;margin:0;\">Smart-Sync Concierge - Sistema de Citas Inteligente</p>\n  </div>\n</div>\n\nReemplaza DOCTOR_NAME, DATE, TIME, REASON, URGENCY, URGENCY_COLOR (#e53935 para urgente, #43a047 para normal) y CONFIRMATION_MESSAGE con los datos reales."
+        }
+      },
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        464,
+        304
+      ],
+      "id": "0e0ccf7b-4136-4972-852b-eb3aa8f7a614"
+    },
+    {
+      "parameters": {
+        "model": "anthropic/claude-haiku-4.5",
+        "options": {
+          "maxTokens": 1024,
+          "temperature": 0.3
+        }
+      },
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        464,
+        512
+      ],
+      "id": "573e79c6-f082-4646-8f78-e09bbcbf7e5a",
+      "credentials": {
+        "openRouterApi": {
+          "id": "fh3p0R39FTAktnL6",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const aiOutput = $input.item.json.output || '';\nlet parsed;\ntry {\n  const jsonMatch = aiOutput.match(/\\{[\\s\\S]*\\}/);\n  parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { message: aiOutput };\n} catch (e) {\n  parsed = { message: aiOutput };\n}\n\nconst appointment = parsed.appointment || {};\nappointment.created_at = new Date().toISOString();\n\nreturn {\n  status: \"success\",\n  appointment: appointment,\n  message: parsed.message || \"Solicitud procesada\",\n  email_html: parsed.email_html || parsed.email_body || parsed.message || aiOutput,\n  ai_processed: true\n};"
+      },
+      "name": "Procesar Respuesta IA",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        656,
+        304
+      ],
+      "id": "b472b389-9198-458a-8cc8-1e3b8416abf3"
+    },
+    {
+      "parameters": {
+        "sendTo": "iservisat@gmail.com",
+        "subject": "Smart-Sync: Solicitud de Cita Recibida",
+        "message": "={{ $json.email_html }}",
+        "options": {}
+      },
+      "name": "Enviar por Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        864,
+        304
+      ],
+      "id": "afa79d6a-4715-4c56-8da1-c69d4d8a38a1",
+      "webhookId": "19ace3b6-144e-47a6-ada8-757c93499f51",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1SdJ5ImGIhg6bs6C",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const appointmentData = $node[\"Procesar Respuesta IA\"].json;\nconst emailResult = $input.item.json;\nreturn {\n  status: \"success\",\n  appointment: appointmentData.appointment || {},\n  message: appointmentData.message,\n  email_sent: true,\n  email_id: emailResult.id || null,\n  ai_processed: true\n};"
+      },
+      "name": "Preparar Respuesta HTTP",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        304
+      ],
+      "id": "6e2f003c-6f8b-4f25-a69d-d45dc0cddba0"
+    }
+  ],
+  "connections": {
+    "Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Procesar Respuesta IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Respuesta IA": {
+      "main": [
+        [
+          {
+            "node": "Enviar por Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar por Email": {
+      "main": [
+        [
+          {
+            "node": "Preparar Respuesta HTTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "f17bd8d2-61c9-4225-a9e1-900c895a7297",
+  "activeVersionId": "f17bd8d2-61c9-4225-a9e1-900c895a7297",
+  "versionCounter": 95,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-02-11T13:52:58.576Z",
+      "createdAt": "2026-02-11T13:52:58.576Z",
+      "role": "workflow:owner",
+      "workflowId": "BkmU9DTalYI0OVml",
+      "projectId": "uaJobSTNEvEYhgiF",
+      "project": {
+        "updatedAt": "2025-03-15T12:45:57.466Z",
+        "createdAt": "2025-03-15T12:42:19.764Z",
+        "id": "uaJobSTNEvEYhgiF",
+        "name": "Paulo Guachizaca Salcedo <iservisat@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "90d771bd-0aea-4cab-bac1-06fcd29b7b95",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-03-15T12:42:19.764Z",
+            "createdAt": "2025-03-15T12:42:19.764Z",
+            "userId": "90d771bd-0aea-4cab-bac1-06fcd29b7b95",
+            "projectId": "uaJobSTNEvEYhgiF",
+            "user": {
+              "updatedAt": "2026-02-12T08:47:00.000Z",
+              "createdAt": "2025-03-15T12:42:19.017Z",
+              "id": "90d771bd-0aea-4cab-bac1-06fcd29b7b95",
+              "email": "iservisat@gmail.com",
+              "firstName": "Paulo",
+              "lastName": "Guachizaca Salcedo",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-03-15T12:46:41.836Z",
+                "personalization_survey_n8n_version": "1.64.0",
+                "automationGoalDevops": [
+                  "cloud-infrastructure-orchestration",
+                  "ci-cd",
+                  "ticketing-systems-integrations",
+                  "incident-response",
+                  "data-syncing",
+                  "reporting"
+                ],
+                "companyType": "systems-integrator",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "9QTDPj9guS2xvNjs",
+                "userActivatedAt": 1745984527427,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770457288888
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-12",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-02-12T11:30:39.000Z",
+    "createdAt": "2026-02-12T11:30:34.395Z",
+    "versionId": "f17bd8d2-61c9-4225-a9e1-900c895a7297",
+    "workflowId": "BkmU9DTalYI0OVml",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "smartsync-prod/cita-email",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "name": "Webhook Input",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          256,
+          304
+        ],
+        "webhookId": "smartsync_cita_email_webhook",
+        "id": "73e46a5d-31f3-4fff-ae07-02c373a901c6"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.body.prompt }}",
+          "options": {
+            "systemMessage": "Eres el asistente de Smart-Sync Concierge, un sistema de gestión de citas médicas.\n\nCuando recibas una solicitud de cita, extrae la información y responde SIEMPRE en JSON válido:\n{\n  \"appointment\": {\n    \"doctor\": \"nombre del doctor\",\n    \"date\": \"fecha solicitada\",\n    \"time\": \"hora solicitada\",\n    \"reason\": \"motivo\",\n    \"urgency\": \"normal o urgente\",\n    \"status\": \"pendiente_confirmacion\"\n  },\n  \"message\": \"Mensaje amigable confirmando la solicitud\",\n  \"email_html\": \"<html con estilos inline del email>\"\n}\n\nPara email_html genera un email HTML profesional con estilos inline. Usa esta plantilla base adaptándola al contenido:\n\n<div style=\"font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;\">\n  <div style=\"background:linear-gradient(135deg,#1a73e8,#0d47a1);padding:30px;text-align:center;border-radius:8px 8px 0 0;\">\n    <h1 style=\"color:#ffffff;margin:0;font-size:22px;\">Smart-Sync Concierge</h1>\n    <p style=\"color:#bbdefb;margin:8px 0 0;font-size:14px;\">Sistema de Gestión de Citas</p>\n  </div>\n  <div style=\"padding:30px;border:1px solid #e0e0e0;border-top:none;\">\n    <p style=\"color:#333;font-size:15px;line-height:1.6;\">Estimado paciente,</p>\n    <p style=\"color:#333;font-size:15px;line-height:1.6;\">Confirmamos la recepción de tu solicitud:</p>\n    <div style=\"background:#f5f7fa;border-left:4px solid #1a73e8;padding:20px;margin:20px 0;border-radius:0 8px 8px 0;\">\n      <table style=\"width:100%;border-collapse:collapse;\">\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;width:130px;\">Doctor</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">DOCTOR_NAME</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Fecha</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">DATE</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Hora</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">TIME</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Motivo</td><td style=\"padding:8px 0;color:#333;font-size:14px;font-weight:600;\">REASON</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;font-size:14px;\">Prioridad</td><td style=\"padding:8px 0;font-size:14px;\"><span style=\"background:URGENCY_COLOR;color:#fff;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600;\">URGENCY</span></td></tr>\n      </table>\n    </div>\n    <p style=\"color:#333;font-size:15px;line-height:1.6;\">CONFIRMATION_MESSAGE</p>\n    <div style=\"text-align:center;margin:25px 0;\">\n      <a href=\"#\" style=\"background:#1a73e8;color:#ffffff;padding:12px 30px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;display:inline-block;\">Ver mi cita</a>\n    </div>\n  </div>\n  <div style=\"background:#f5f7fa;padding:20px;text-align:center;border-radius:0 0 8px 8px;border:1px solid #e0e0e0;border-top:none;\">\n    <p style=\"color:#999;font-size:12px;margin:0;\">Smart-Sync Concierge - Sistema de Citas Inteligente</p>\n  </div>\n</div>\n\nReemplaza DOCTOR_NAME, DATE, TIME, REASON, URGENCY, URGENCY_COLOR (#e53935 para urgente, #43a047 para normal) y CONFIRMATION_MESSAGE con los datos reales."
+          }
+        },
+        "name": "AI Agent",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          464,
+          304
+        ],
+        "id": "0e0ccf7b-4136-4972-852b-eb3aa8f7a614"
+      },
+      {
+        "parameters": {
+          "model": "anthropic/claude-haiku-4.5",
+          "options": {
+            "maxTokens": 1024,
+            "temperature": 0.3
+          }
+        },
+        "name": "OpenRouter Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          464,
+          512
+        ],
+        "id": "573e79c6-f082-4646-8f78-e09bbcbf7e5a",
+        "credentials": {
+          "openRouterApi": {
+            "id": "fh3p0R39FTAktnL6",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "functionCode": "const aiOutput = $input.item.json.output || '';\nlet parsed;\ntry {\n  const jsonMatch = aiOutput.match(/\\{[\\s\\S]*\\}/);\n  parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { message: aiOutput };\n} catch (e) {\n  parsed = { message: aiOutput };\n}\n\nconst appointment = parsed.appointment || {};\nappointment.created_at = new Date().toISOString();\n\nreturn {\n  status: \"success\",\n  appointment: appointment,\n  message: parsed.message || \"Solicitud procesada\",\n  email_html: parsed.email_html || parsed.email_body || parsed.message || aiOutput,\n  ai_processed: true\n};"
+        },
+        "name": "Procesar Respuesta IA",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [
+          656,
+          304
+        ],
+        "id": "b472b389-9198-458a-8cc8-1e3b8416abf3"
+      },
+      {
+        "parameters": {
+          "sendTo": "iservisat@gmail.com",
+          "subject": "Smart-Sync: Solicitud de Cita Recibida",
+          "message": "={{ $json.email_html }}",
+          "options": {}
+        },
+        "name": "Enviar por Email",
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2,
+        "position": [
+          864,
+          304
+        ],
+        "id": "afa79d6a-4715-4c56-8da1-c69d4d8a38a1",
+        "webhookId": "19ace3b6-144e-47a6-ada8-757c93499f51",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "1SdJ5ImGIhg6bs6C",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "functionCode": "const appointmentData = $node[\"Procesar Respuesta IA\"].json;\nconst emailResult = $input.item.json;\nreturn {\n  status: \"success\",\n  appointment: appointmentData.appointment || {},\n  message: appointmentData.message,\n  email_sent: true,\n  email_id: emailResult.id || null,\n  ai_processed: true\n};"
+        },
+        "name": "Preparar Respuesta HTTP",
+        "type": "n8n-nodes-base.function",
+        "typeVersion": 1,
+        "position": [
+          1056,
+          304
+        ],
+        "id": "6e2f003c-6f8b-4f25-a69d-d45dc0cddba0"
+      }
+    ],
+    "connections": {
+      "Webhook Input": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenRouter Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Procesar Respuesta IA",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Procesar Respuesta IA": {
+        "main": [
+          [
+            {
+              "node": "Enviar por Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Enviar por Email": {
+        "main": [
+          [
+            {
+              "node": "Preparar Respuesta HTTP",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Paulo Guachizaca Salcedo",
+    "name": "Version f17bd8d2",
+    "description": "",
+    "autosaved": true,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-02-12T11:30:39.570Z",
+        "id": 74,
+        "workflowId": "BkmU9DTalYI0OVml",
+        "versionId": "f17bd8d2-61c9-4225-a9e1-900c895a7297",
+        "event": "activated",
+        "userId": "90d771bd-0aea-4cab-bac1-06fcd29b7b95"
+      }
+    ]
+  }
+}

@@ -50,6 +50,7 @@ Smart-Sync Concierge es una **API de citas agentica** donde un sistema de agente
 | ├── Default | Qwen | 2.5 | Código abierto, coste competitivo |
 | ├── Alternative | Claude | 3.5 | Razonamiento superior |
 | └── Alternative | GPT-4 | o1 | Planificación compleja |
+| Orquestación n8n | n8n + AI Agent | - | Workflows con Claude Haiku 4.5 via OpenRouter |
 | Orquestación | LangGraph | 0.2+ | Stateful multi-agent workflows |
 | Storage | JSON Local | - | Prototipado rápido |
 | Observabilidad | OpenTelemetry | 1.20+ | Tracing, metrics, logs |

@@ -7,22 +7,62 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-### En Progreso
-- Integración n8n: Setup automático de workflows (✅ Completado en v0.1.1)
-- Actualización de nodos n8n workflow (✅ Completado - 10/02/2026)
-
 ### Planeado
 - Validación HMAC para webhooks n8n
 - Endpoint de diagnóstico `/api/v1/mcp/status/`
 - Tests unitarios para n8n integration
-- Soporte para múltiples workflows
 - Webhooks de n8n → Django (notificaciones)
 - Dashboard de monitoreo
 - Migración a base de datos PostgreSQL
-- Implementación de sistema de notificaciones (email, SMS)
 - Integración con calendarios externos (Google Calendar, Outlook)
 - Panel de analytics y reportes
 - Multi-tenant para múltiples negocios
+
+---
+
+## [0.3.0] - 2026-02-12
+
+### ✨ n8n AI Agent con Claude Haiku 4.5
+
+#### Workflow n8n Productivo con IA
+- **AI Agent** integrado en n8n usando Claude Haiku 4.5 via OpenRouter
+- Procesamiento de lenguaje natural para solicitudes de citas médicas
+- Extracción automática de: doctor, fecha, hora, motivo, urgencia
+- Respuesta JSON estructurada con datos del appointment
+- Email HTML con estilos inline enviado via Gmail OAuth2
+- Respuesta HTTP al cliente con datos procesados
+
+#### Flujo del Workflow (6 nodos)
+```
+Webhook Input → AI Agent (Claude Haiku 4.5) → Procesar Respuesta IA → Gmail → Preparar Respuesta HTTP → (lastNode response)
+```
+
+1. **Webhook Input**: Recibe POST con prompt de cita en lenguaje natural
+2. **AI Agent**: Procesa con Claude Haiku 4.5 y devuelve JSON estructurado
+3. **OpenRouter Chat Model**: Sub-nodo LLM conectado al agente
+4. **Procesar Respuesta IA**: Parsea JSON del agente
+5. **Enviar por Email**: Gmail OAuth2 con plantilla HTML profesional
+6. **Preparar Respuesta HTTP**: Construye respuesta final para el cliente
+
+#### Endpoint de Producción
+- **URL**: `POST https://n8n.codeia.dev/webhook/smartsync-prod/cita-email`
+- **Payload**: `{"prompt": "...", "user_id": "...", "user_timezone": "..."}`
+- **Response**: JSON con appointment, message, email_sent, ai_processed
+
+#### Limpieza y Organización
+- Eliminados 13 workflows duplicados de pruebas anteriores
+- Un único workflow productivo: `Smart-Sync Concierge - AI Agent` (ID: BkmU9DTalYI0OVml)
+- Copia JSON del workflow guardada en `docs/n8n_workflow_ai_agent.json`
+
+#### Archivos Modificados/Creados
+- `apps/mcp_integration/services/workflow_builder.py`: Corrección parámetro Gmail (textPlain → message), nuevo método de conexiones con respuesta HTTP
+- `docs/n8n_workflow_ai_agent.json`: Backup del workflow productivo
+- `scripts/n8n/update_workflow_with_response.py`: Script de actualización de workflows
+- `scripts/n8n/create_simple_workflow.py`: Script de creación de workflows
+
+#### Credenciales Utilizadas
+- OpenRouter API (Claude Haiku 4.5): `fh3p0R39FTAktnL6`
+- Gmail OAuth2: Configurada manualmente en n8n UI
 
 ---
 
@@ -428,4 +468,4 @@ Para este proyecto seguimos [Semantic Versioning](https://semver.org/):
 ---
 
 *Fecha de lanzamiento inicial: 22 de Enero, 2026*
-*Versión actual: 0.1.0*
+*Versión actual: 0.3.0*
